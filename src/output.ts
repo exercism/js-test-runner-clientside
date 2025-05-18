@@ -96,7 +96,7 @@ export function generateOutput(
 
   return {
     status,
-    message: "",
+    message: output(testRun.logs[0]),
     tests: testResults,
     version: 3,
   };

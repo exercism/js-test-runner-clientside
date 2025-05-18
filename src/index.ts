@@ -89,6 +89,10 @@ export async function runTests(
 
   cleanup();
 
+  // Wait an animation frame so logs can come in
+  await new Promise((resolve) => requestAnimationFrame(resolve));
+
+  // Generate output
   return generateOutput(result, config.custom);
 }
 
@@ -161,8 +165,9 @@ const run = {
 }
 
 function log(logMessage) {
-  run.logs[run.taskId] ||= []
-  run.logs[run.taskId].push(logMessage)
+  // TODO track task id when logging, somehow
+  run.logs[0] ||= []
+  run.logs[0].push(logMessage)
 }
 
 function onMessage(event) {
