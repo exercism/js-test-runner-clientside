@@ -3,6 +3,7 @@ export interface TestRun {
   skipped: number;
   passed: number;
   messages: TestMessage[][];
+  logs: string[][];
   result: null | "passed" | "failed";
   completed: true | null;
 }

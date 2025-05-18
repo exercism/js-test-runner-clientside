@@ -1,6 +1,6 @@
 // const process = { env: { NODE_ENV: 'PRODUCTION' }, argv: [], version: "", cwd: () => ".", platform: '' };
 
-import { generateOutput, type TestOutput } from "./output";
+import { generateOutput, type OutputInterface } from "./output";
 import type { FailedTestRun, TestRun } from "./types";
 import {
   findTestCode,
@@ -17,7 +17,7 @@ export async function runTests(
   files: Record<string, string>,
   userPaths: string[],
   transpile: (code: string, type: "code" | "test") => string = (code) => code,
-): Promise<TestOutput> {
+): Promise<OutputInterface> {
   const config = readConfig<CustomJavaScriptConfig>(files);
 
   const userCodes = findUserCode(config, files, userPaths)
@@ -43,7 +43,7 @@ export async function runTests(
   let interval: undefined | NodeJS.Timeout;
 
   function cleanup() {
-    console.log("[suite] cleaning up run", tests, object);
+    console.debug("[suite] cleaning up run", tests, object);
     URL.revokeObjectURL(tests);
     URL.revokeObjectURL(object);
 
@@ -89,7 +89,7 @@ export async function runTests(
 
   cleanup();
 
-  return generateOutput(result);
+  return generateOutput(result, config.custom);
 }
 
 function prepareTest(
@@ -98,6 +98,22 @@ function prepareTest(
   slug: string,
   options: { enableTaskIds: boolean } = { enableTaskIds: false },
 ) {
+  code = `
+const originalConsoleLog = console.log.bind(console)
+
+function log(...args) {
+  args.forEach((arg) => {
+    window.postMessage(JSON.stringify(arg, null, 2));
+  })
+
+  originalConsoleLog(...args)
+}
+
+console.log = log
+
+${code}
+  `;
+
   const importableCode = esm`${code}`;
 
   const regexp = new RegExp(
@@ -138,10 +154,28 @@ const run = {
   skipped: 0,
   passed: 0,
   messages: [],
+  logs: [],
   promises: [],
 	result: null,
   completed: null
 }
+
+function log(logMessage) {
+  run.logs[run.taskId] ||= []
+  run.logs[run.taskId].push(logMessage)
+}
+
+function onMessage(event) {
+  if (event.type !== "message") {
+    return
+  }
+
+  if (typeof event.data === 'string') {
+    log(event.data);
+  }
+}
+
+window.addEventListener('message', onMessage);
 
 let failFast = true
 let awaiting = 0
@@ -157,12 +191,15 @@ function passTest(name) {
   awaiting -= 1
   run.passed += 1
 
+  run.messages[run.taskId] ||= []
   run.messages[run.taskId].push({ test: name, status: 'passed' })
 }
 
 function failTest(name, err) {
   awaiting -= 1
   run.failed += 1
+
+  run.messages[run.taskId] ||= []
   run.messages[run.taskId].push({ test: name, status: 'failed', details: err.message, err: err })
 
 	window.lastErr = err
@@ -195,6 +232,8 @@ function finishSuite() {
 
   run.result = run.failed === 0 ? 'passed' : 'failed'
 	run.completed = true
+
+  window.removeEventListener('message', onMessage);
 }
 
 async function test(name, c) {
