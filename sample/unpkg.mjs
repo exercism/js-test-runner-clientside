@@ -29049,7 +29049,7 @@ async function runTests(slug, files, userPaths, transpile = (code) => code) {
   cleanup();
   // Wait an animation frame
   await new Promise((resolve) => requestAnimationFrame(resolve));
-  debugger;
+
   // Generate output
   return generateOutput(result, config.custom);
 }
