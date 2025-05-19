@@ -67,7 +67,7 @@ function generateOutput(testRun, options) {
   }
   return {
     status,
-    message: "",
+    message: output(testRun.logs[0]),
     tests: testResults,
     version: 3,
   };
@@ -516,8 +516,8 @@ function requireConversions() {
 
   function comparativeDistance(x, y) {
     /*
-			See https://en.m.wikipedia.org/wiki/Euclidean_distance#Squared_Euclidean_distance
-		*/
+      See https://en.m.wikipedia.org/wiki/Euclidean_distance#Squared_Euclidean_distance
+    */
     return (x[0] - y[0]) ** 2 + (x[1] - y[1]) ** 2 + (x[2] - y[2]) ** 2;
   }
 
@@ -1246,15 +1246,15 @@ function requireRoute() {
   const conversions = requireConversions();
 
   /*
-		This function routes a model to all other models.
+    This function routes a model to all other models.
 
-		all functions that are routed have a property `.conversion` attached
-		to the returned synthetic function. This property is an array
-		of strings, each with the steps in between the 'from' and 'to'
-		color models (inclusive).
+    all functions that are routed have a property `.conversion` attached
+    to the returned synthetic function. This property is an array
+    of strings, each with the steps in between the 'from' and 'to'
+    color models (inclusive).
 
-		conversions that are not possible simply are not included.
-	*/
+    conversions that are not possible simply are not included.
+  */
 
   function buildGraph() {
     const graph = {};
@@ -8734,28 +8734,28 @@ function requireJasmineUtils() {
   jasmineUtils.isImmutableUnorderedSet = isImmutableUnorderedSet;
 
   /*
-	Copyright (c) 2008-2016 Pivotal Labs
+  Copyright (c) 2008-2016 Pivotal Labs
 
-	Permission is hereby granted, free of charge, to any person obtaining
-	a copy of this software and associated documentation files (the
-	"Software"), to deal in the Software without restriction, including
-	without limitation the rights to use, copy, modify, merge, publish,
-	distribute, sublicense, and/or sell copies of the Software, and to
-	permit persons to whom the Software is furnished to do so, subject to
-	the following conditions:
+  Permission is hereby granted, free of charge, to any person obtaining
+  a copy of this software and associated documentation files (the
+  "Software"), to deal in the Software without restriction, including
+  without limitation the rights to use, copy, modify, merge, publish,
+  distribute, sublicense, and/or sell copies of the Software, and to
+  permit persons to whom the Software is furnished to do so, subject to
+  the following conditions:
 
-	The above copyright notice and this permission notice shall be
-	included in all copies or substantial portions of the Software.
+  The above copyright notice and this permission notice shall be
+  included in all copies or substantial portions of the Software.
 
-	THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-	EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-	MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-	NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-	LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-	OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-	WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+  NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+  LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+  OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+  WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-	*/
+  */
 
   /* eslint-disable */
   // Extracted out of jasmine 2.5.2
@@ -29047,27 +29047,43 @@ async function runTests(slug, files, userPaths, transpile = (code) => code) {
       return { ...{ message: error.message } };
     });
   cleanup();
+  // Wait an animation frame
   await new Promise((resolve) => requestAnimationFrame(resolve));
-
+  debugger;
+  // Generate output
   return generateOutput(result, config.custom);
 }
 function prepareTest(tests, code, slug, options = { enableTaskIds: false }) {
+  const globalLogger = esm`
+    const listeners = []
+    const originalConsoleLog = console.log.bind(console)
+
+    export function log(...args) {
+      args.forEach((arg) => {
+        const message = JSON.stringify(arg, null, 2)
+        listeners.forEach((listener) => listener(message))
+      })
+
+      originalConsoleLog(...args)
+    }
+
+    console.log = log
+
+    export function addListener(listener) {
+      listeners.push(listener);
+      return () => {
+        const index = listeners.indexOf(listener);
+        if (index !== -1) {
+          listeners.splice(index, 1);
+        }
+      }
+    }
+  `;
   code = `
-const originalConsoleLog = console.log.bind(console)
-
-function log(...args) {
-  args.forEach((arg) => {
-    window.postMessage(JSON.stringify(arg, null, 2));
-  })
-
-  originalConsoleLog(...args)
-}
-
-console.log = log
+import { log } from '${globalLogger}'
 
 ${code}
   `;
-
   const importableCode = esm`${code}`;
   const regexp = new RegExp(
     `\\./${slug}(?:\\.(?:ts|js|mjs|cjs|mts|cts|tsx|jsx))?`,
@@ -29087,6 +29103,12 @@ ${code}
     0,
     TEST_HELPER,
   );
+  // Add log listener
+  lines.splice(
+    lines.findIndex((l) => l.indexOf("from ") !== -1) + 1,
+    0,
+    `import { addListener as addLogListener } from '${globalLogger}'`,
+  );
   return { tests: esm`${lines.join("\n")}`, object: importableCode };
 }
 const esm = ({ raw }, ...vals) =>
@@ -29104,62 +29126,44 @@ const run = {
   messages: [],
   logs: [],
   promises: [],
-	result: null,
+  result: null,
   completed: null
 }
 
-const testToTaskId = {}
-
 function log(logMessage) {
-  run.logs[run.taskId] ||= []
-  run.logs[run.taskId].push(logMessage)
-  console.warn(logMessage);
+  // TODO track task id when logging, somehow
+  run.logs[0] ||= []
+  run.logs[0].push(logMessage)
 }
 
-function onMessage(event) {
-  console.warn(event);
-
-  if (event.type !== "message") {
-    return
-  }
-
-  if (typeof event.data === 'string') {
-    log(event.data);
-  }
-}
-
-window.addEventListener('message', onMessage);
+const removeLogListener = addLogListener(log)
 
 let failFast = true
 let awaiting = 0
 
-function startTest(name) {
+function startTest(taskId, name) {
   awaiting += 1
   console.debug("[test] "+ name)
 
-  testToTaskId[name] = run.taskId
+  run.messages[taskId] ||= []
 }
 
-function passTest(name) {
+function passTest(taskId, name) {
   awaiting -= 1
   run.passed += 1
-
-  const taskId = testToTaskId[name]
 
   run.messages[taskId] ||= []
   run.messages[taskId].push({ test: name, status: 'passed' })
 }
 
-function failTest(name, err) {
+function failTest(taskId, name, err) {
   awaiting -= 1
   run.failed += 1
-
-  const taskId = testToTaskId[name]
 
   run.messages[taskId] ||= []
   run.messages[taskId].push({ test: name, status: 'failed', details: err.message, err: err })
 
-	window.lastErr = err
+  window.lastErr = err
 
   if (err.constructor.name === 'JestAssertionError') {
     console.error(\`[test] failed assertion of \${name}.\\n\`, err.message)
@@ -29188,24 +29192,26 @@ function finishSuite() {
   }
 
   run.result = run.failed === 0 ? 'passed' : 'failed'
-	run.completed = true
+  run.completed = true
 
-  // window.removeEventListener('message', onMessage);
+  removeLogListener();
 }
 
 async function test(name, c) {
+  const taskId = run.taskId
+
   if (failFast && run.failed > 0) {
     skipTest()
     return
   }
 
-  startTest(name)
+  startTest(taskId, name)
 
   try {
     await c()
-    passTest(name)
+    passTest(taskId, name)
   } catch (err) {
-    failTest(name, err)
+    failTest(taskId, name, err)
   }
 }
 
@@ -29216,7 +29222,7 @@ const xit = test
 async function describe(name, c) {
   runSuite(name)
 
-  const taskId = run.taskId;
+  const taskId = run.taskId
 
   try {
     await c()
@@ -29224,6 +29230,7 @@ async function describe(name, c) {
   } catch (err) {
     run.messages[taskId].push({ test: name, status: 'failed', details: err.message, err: err })
   }
+
   finishSuite()
 }
 

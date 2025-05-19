@@ -89,7 +89,7 @@ export async function runTests(
 
   cleanup();
 
-  // Wait an animation frame so logs can come in
+  // Wait an animation frame
   await new Promise((resolve) => requestAnimationFrame(resolve));
 
   // Generate output
@@ -102,18 +102,34 @@ function prepareTest(
   slug: string,
   options: { enableTaskIds: boolean } = { enableTaskIds: false },
 ) {
+  const globalLogger = esm`
+    const listeners = []
+    const originalConsoleLog = console.log.bind(console)
+
+    export function log(...args) {
+      args.forEach((arg) => {
+        const message = JSON.stringify(arg, null, 2)
+        listeners.forEach((listener) => listener(message))
+      })
+
+      originalConsoleLog(...args)
+    }
+
+    console.log = log
+
+    export function addListener(listener) {
+      listeners.push(listener);
+      return () => {
+        const index = listeners.indexOf(listener);
+        if (index !== -1) {
+          listeners.splice(index, 1);
+        }
+      }
+    }
+  `;
+
   code = `
-const originalConsoleLog = console.log.bind(console)
-
-function log(...args) {
-  args.forEach((arg) => {
-    window.postMessage(JSON.stringify(arg, null, 2));
-  })
-
-  originalConsoleLog(...args)
-}
-
-console.log = log
+import { log } from '${globalLogger}'
 
 ${code}
   `;
@@ -139,6 +155,13 @@ ${code}
     lines.findIndex((l) => l.indexOf("from ") !== -1) + 1,
     0,
     TEST_HELPER,
+  );
+
+  // Add log listener
+  lines.splice(
+    lines.findIndex((l) => l.indexOf("from ") !== -1) + 1,
+    0,
+    `import { addListener as addLogListener } from '${globalLogger}'`,
   );
 
   return { tests: esm`${lines.join("\n")}`, object: importableCode };
@@ -170,42 +193,32 @@ function log(logMessage) {
   run.logs[0].push(logMessage)
 }
 
-function onMessage(event) {
-  if (event.type !== "message") {
-    return
-  }
-
-  if (typeof event.data === 'string') {
-    log(event.data);
-  }
-}
-
-window.addEventListener('message', onMessage);
+const removeLogListener = addLogListener(log)
 
 let failFast = true
 let awaiting = 0
 
-function startTest(name) {
+function startTest(taskId, name) {
   awaiting += 1
   console.debug("[test] "+ name)
 
-  run.messages[run.taskId] ||= []
+  run.messages[taskId] ||= []
 }
 
-function passTest(name) {
+function passTest(taskId, name) {
   awaiting -= 1
   run.passed += 1
 
-  run.messages[run.taskId] ||= []
-  run.messages[run.taskId].push({ test: name, status: 'passed' })
+  run.messages[taskId] ||= []
+  run.messages[taskId].push({ test: name, status: 'passed' })
 }
 
-function failTest(name, err) {
+function failTest(taskId, name, err) {
   awaiting -= 1
   run.failed += 1
 
-  run.messages[run.taskId] ||= []
-  run.messages[run.taskId].push({ test: name, status: 'failed', details: err.message, err: err })
+  run.messages[taskId] ||= []
+  run.messages[taskId].push({ test: name, status: 'failed', details: err.message, err: err })
 
 	window.lastErr = err
 
@@ -238,22 +251,24 @@ function finishSuite() {
   run.result = run.failed === 0 ? 'passed' : 'failed'
 	run.completed = true
 
-  window.removeEventListener('message', onMessage);
+  removeLogListener();
 }
 
 async function test(name, c) {
+  const taskId = run.taskId
+
   if (failFast && run.failed > 0) {
     skipTest()
     return
   }
 
-  startTest(name)
+  startTest(taskId, name)
 
   try {
     await c()
-    passTest(name)
+    passTest(taskId, name)
   } catch (err) {
-    failTest(name, err)
+    failTest(taskId, name, err)
   }
 }
 
@@ -263,12 +278,16 @@ const xit = test
 
 async function describe(name, c) {
   runSuite(name)
+
+  const taskId = run.taskId
+
   try {
     await c()
     await Promise.all(run.promises)
   } catch (err) {
-    run.messages[run.taskId].push({ test: name, status: 'failed', details: err.message, err: err })
+    run.messages[taskId].push({ test: name, status: 'failed', details: err.message, err: err })
   }
+
   finishSuite()
 }
 
