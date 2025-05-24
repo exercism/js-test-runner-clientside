@@ -20,19 +20,23 @@ export async function runTests(
 ): Promise<OutputInterface> {
   const config = readConfig<CustomJavaScriptConfig>(files);
 
-  const userCodes = findUserCode(config, files, userPaths)
-    .map((code) => transpile(code, "code"))
-    .join("\n\n\n");
+  // Get all user provided code
+  const userCodes = findUserCode(config, files, userPaths);
+  for (const path in userCodes) {
+    userCodes[path] = transpile(userCodes[path], "code");
+  }
 
-  const testCodes = findTestCode(config, files, userPaths)
-    .map((code) => transpile(code, "test"))
-    .join("\n\n\n");
+  // Get all test code (strip user submitted)
+  const testCodes = findTestCode(config, files, userPaths);
+  for (const path in testCodes) {
+    testCodes[path] = transpile(testCodes[path], "test");
+  }
 
   const runOptions = {
     enableTaskIds: Boolean(config.custom["flag.tests.task-per-describe"]),
   };
 
-  const { tests, object } = prepareTest(testCodes, userCodes, slug, runOptions);
+  const { entry, urls } = prepareTest(testCodes, userCodes, runOptions);
 
   // Set some globals
   const globals = globalThis as Record<string, any>;
@@ -43,9 +47,8 @@ export async function runTests(
   let interval: undefined | NodeJS.Timeout;
 
   function cleanup() {
-    console.debug("[suite] cleaning up run", tests, object);
-    URL.revokeObjectURL(tests);
-    URL.revokeObjectURL(object);
+    console.debug("[suite] cleaning up run", urls);
+    urls.forEach((objectUrl) => URL.revokeObjectURL(objectUrl));
 
     clearInterval(interval);
     clearTimeout(timer);
@@ -55,7 +58,7 @@ export async function runTests(
     delete globals["jest"];
   }
 
-  const result = await import(/* webpackIgnore: true */ `${tests}`)
+  const result = await import(/* webpackIgnore: true */ `${entry}`)
     .then<TestRun>((result) => {
       if (result.run.completed) {
         return result.run;
@@ -97,11 +100,10 @@ export async function runTests(
 }
 
 function prepareTest(
-  tests: string,
-  code: string,
-  slug: string,
+  tests: Record<string, string>,
+  code: Record<string, string>,
   options: { enableTaskIds: boolean } = { enableTaskIds: false },
-) {
+): { entry: string; urls: string[] } {
   const globalLogger = esm`
     const listeners = []
     const originalConsoleLog = console.log.bind(console)
@@ -128,43 +130,64 @@ function prepareTest(
     }
   `;
 
-  code = `
+  const urls: string[] = [];
+
+  for (const userPath in code) {
+    const userCode = `
 import { log } from '${globalLogger}'
 
-${code}
+${code[userPath]}
   `;
+    const importableCode = esm`${userCode}`;
+    urls.push(importableCode);
 
-  const importableCode = esm`${code}`;
+    const userPathParts = userPath.split("/");
+    const fileName = userPathParts.pop() || "";
+    const fileNameParts = fileName.split(".");
+    fileNameParts.pop();
 
-  const regexp = new RegExp(
-    `\\./${slug}(?:\\.(?:ts|js|mjs|cjs|mts|cts|tsx|jsx))?`,
-  );
-  const lines = tests.replace(regexp, `${importableCode}`).split("\n");
+    const importName = [...userPathParts, fileNameParts.join(".")].join("/");
 
-  // Delete globals import
-  lines.splice(
-    lines.findIndex(
-      (l) => l.indexOf("import ") !== -1 && l.indexOf("from '@jest/globals'"),
-    ),
-    1,
-    "// import { ... } from '@jest/globals'",
-  );
+    const regexp = new RegExp(
+      `\\./${importName}(?:\\.(?:ts|js|mjs|cjs|mts|cts|tsx|jsx))?`,
+    );
 
-  // Add test helper
-  lines.splice(
-    lines.findIndex((l) => l.indexOf("from ") !== -1) + 1,
-    0,
-    TEST_HELPER,
-  );
+    for (const testPath in tests) {
+      tests[testPath] = tests[testPath].replace(regexp, `${importableCode}`);
+    }
+  }
 
-  // Add log listener
-  lines.splice(
-    lines.findIndex((l) => l.indexOf("from ") !== -1) + 1,
-    0,
-    `import { addListener as addLogListener } from '${globalLogger}'`,
-  );
+  for (const testPath in tests) {
+    const lines = tests[testPath].split("\n");
 
-  return { tests: esm`${lines.join("\n")}`, object: importableCode };
+    // Delete globals import
+    lines.splice(
+      lines.findIndex(
+        (l) => l.indexOf("import ") !== -1 && l.indexOf("from '@jest/globals'"),
+      ),
+      1,
+      "// import { ... } from '@jest/globals'",
+    );
+
+    // Add test helper
+    lines.splice(
+      lines.findIndex((l) => l.indexOf("from ") !== -1) + 1,
+      0,
+      TEST_HELPER,
+    );
+
+    // Add log listener
+    lines.splice(
+      lines.findIndex((l) => l.indexOf("from ") !== -1) + 1,
+      0,
+      `import { addListener as addLogListener } from '${globalLogger}'`,
+    );
+
+    const importableTestCode = esm`${lines.join("\n")}`;
+    urls.push(importableTestCode);
+  }
+
+  return { entry: urls[urls.length - 1], urls };
 }
 
 const esm = ({ raw }: TemplateStringsArray, ...vals: string[]) =>

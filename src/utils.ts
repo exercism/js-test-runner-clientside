@@ -39,7 +39,7 @@ export function findUserCode(
   config: ExerciseConfig,
   files: Record<string, string>,
   userPaths: string[],
-) {
+): Record<string, string> {
   userPaths = userPaths.filter((path) =>
     config.files.solution.some((pattern) => pattern.test(path)),
   );
@@ -50,14 +50,19 @@ export function findUserCode(
     );
   }
 
-  return userPaths.map((path) => files[path]).filter(Boolean);
+  return userPaths.reduce<Record<string, string>>((result, path) => {
+    if (Object.prototype.hasOwnProperty.call(files, path)) {
+      result[path] = files[path];
+    }
+    return result;
+  }, {});
 }
 
 export function findTestCode(
   config: ExerciseConfig,
   files: Record<string, string>,
   userPaths?: string[],
-) {
+): Record<string, string> {
   let testPaths = Object.keys(files).filter((path) =>
     config.files.test.some((pattern) => pattern.test(path)),
   );
@@ -72,7 +77,12 @@ export function findTestCode(
     );
   }
 
-  return testPaths.map((path) => files[path]).filter(Boolean);
+  return testPaths.reduce<Record<string, string>>((result, path) => {
+    if (Object.prototype.hasOwnProperty.call(files, path)) {
+      result[path] = files[path];
+    }
+    return result;
+  }, {});
 }
 
 export type ExerciseConfig<Custom extends object = {}> = Readonly<{
