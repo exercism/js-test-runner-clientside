@@ -1,17 +1,7 @@
-```
-yarn rollup -c
-```
+# @exercism/javascript-browser-test-runner
 
-Then in `output/index.js` add at the top:
+## Build
 
-```javascript
-const process = {
-  env: { NODE_ENV: "PRODUCTION" },
-  argv: [],
-  version: "",
-  cwd: () => ".",
-  platform: "",
-};
 ```
-
-And search for `const builtInObject = [`, replace `Buffer` with `Buffer$1`.
+yarn build
+```

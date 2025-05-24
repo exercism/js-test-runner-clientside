@@ -1,11 +1,18 @@
 {
   "name": "@exercism/javascript-browser-test-runner",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Exercism JavaScript Track test runner that runs in the browser",
   "source": "src/index.ts",
-  "main": "./output/index.js",
+  "types": "./output/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./output/imported.mjs",
+      "require": "./output/required.cjs",
+      "default": "./output/fallback.js"
+    }
+  },
   "scripts": {
-    "build": "yarn run rollup -c"
+    "build": "yarn node build.mjs && tsc"
   },
   "repository": {
     "type": "git",
@@ -23,15 +30,17 @@
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^16.0.1",
     "@rollup/plugin-typescript": "^12.1.2",
+    "browserslist": "^4.24.5",
+    "browserslist-to-esbuild": "^2.1.1",
+    "esbuild": "^0.25.4",
+    "esbuild-plugins-node-modules-polyfill": "^1.7.0",
+    "expect": "^26.2.0",
+    "jest-mock": "^24.9.0",
     "prettier": "^3.5.3",
     "rollup": "^4.41.0",
     "rollup-plugin-polyfill-node": "^0.13.0",
     "tslib": "^2.8.1",
     "typescript": "^5.8.3"
-  },  
-  "dependencies": {
-    "expect": "^26.2.0",
-    "jest-mock": "^24.9.0"
   },
   "files": [
     "src/*",
@@ -41,5 +50,7 @@
     "tsconfig.json",
     "yarn.lock"
   ],
-  "private": false
+  "browserslist": [
+    "defaults and fully supports es6-module"
+  ]
 }
