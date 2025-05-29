@@ -20,6 +20,11 @@ export function readConfig<Custom extends object = {}>(
     config.files[key] = files[key]!.map(globToMatcher);
   });
 
+  // Old exercise support
+  if (!("custom" in config)) {
+    (config as any).custom = {};
+  }
+
   return config as ExerciseConfig<Custom>;
 }
 

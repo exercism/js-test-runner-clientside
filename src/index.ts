@@ -138,6 +138,13 @@ import { log } from '${globalLogger}'
 
 ${code[userPath]}
   `;
+
+    if (userCode.includes("module.exports = ")) {
+      throw new Error(
+        "You must use ESM export syntax. Remove all references to module.exports and exports.<...> from the code (including comments) to continue.",
+      );
+    }
+
     const importableCode = esm`${userCode}`;
     urls.push(importableCode);
 

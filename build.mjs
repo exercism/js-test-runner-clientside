@@ -22,6 +22,8 @@ await Promise.all([
       mockFsPlugin,
     ],
     sourcemap: true,
+    keepNames: true,
+    minify: true,
   }),
   build({
     inject: ["./build/process-shim.js"],
@@ -41,6 +43,8 @@ await Promise.all([
       mockFsPlugin,
     ],
     sourcemap: true,
+    keepNames: true,
+    minify: true,
   }),
   build({
     inject: ["./build/process-shim.js"],
@@ -60,5 +64,7 @@ await Promise.all([
       mockFsPlugin,
     ],
     sourcemap: true,
+    keepNames: true,
+    minify: true,
   }),
 ]);
