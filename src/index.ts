@@ -13,11 +13,38 @@ import jestExpect from "expect";
 import jest from "jest-mock";
 
 export async function runTests(
-  slug: string,
+  _slug: string,
   files: Record<string, string>,
   userPaths: string[],
   transpile: (code: string, type: "code" | "test") => string = (code) => code,
 ): Promise<OutputInterface> {
+  return runTests_(files, userPaths, transpile).catch((error: unknown) => {
+    let message: string;
+
+    if (error instanceof Error) {
+      message = error.message;
+    } else if (Object.prototype.hasOwnProperty.call(error, "message")) {
+      message = String((error as { message: unknown }).message);
+    } else if (Object.prototype.hasOwnProperty.call(error, "toString")) {
+      message = (error as { toString(): string }).toString();
+    } else {
+      throw error;
+    }
+
+    return {
+      version: 1,
+      status: "error",
+      message,
+      tests: [],
+    };
+  });
+}
+
+async function runTests_(
+  files: Record<string, string>,
+  userPaths: string[],
+  transpile: (code: string, type: "code" | "test") => string,
+) {
   const config = readConfig<CustomJavaScriptConfig>(files);
 
   // Get all user provided code
