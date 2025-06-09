@@ -19,5 +19,5 @@ npx serve sample
 Don't forget to update `package.json` version.
 
 ```
-yarn npm publish
+npm publish --access public
 ```
