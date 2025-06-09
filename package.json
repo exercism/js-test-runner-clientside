@@ -1,6 +1,6 @@
 {
   "name": "@exercism/javascript-browser-test-runner",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "description": "Exercism JavaScript Track test runner that runs in the browser",
   "source": "src/index.ts",
   "types": "./output/index.d.ts",

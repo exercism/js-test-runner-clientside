@@ -96,7 +96,9 @@ async function runTests_(
           () => {
             clearInterval(interval);
 
-            reject("Did not finish the tests within reasonable time");
+            reject(
+              new Error("Did not finish the tests within reasonable time"),
+            );
           },
           100 * 10 * 30 /* 30 seconds */,
         );
@@ -348,6 +350,7 @@ async function describe(name, c) {
     await c()
     await Promise.all(run.promises)
   } catch (err) {
+    run.messages[taskId] ||= []
     run.messages[taskId].push({ test: name, status: 'failed', details: err.message, err: err })
   }
 

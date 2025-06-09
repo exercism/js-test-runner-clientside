@@ -17197,6 +17197,7 @@ async function describe(name, c) {
     await c()
     await Promise.all(run.promises)
   } catch (err) {
+     run.messages[taskId] ||= []
     run.messages[taskId].push({ test: name, status: 'failed', details: err.message, err: err })
   }
 
