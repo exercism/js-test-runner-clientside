@@ -5,10 +5,10 @@ __metadata:
   version: 8
   cacheKey: 10c0
 
-"@exercism/javascript-browser-test-runner@npm:^0.1.0":
-  version: 0.1.0
-  resolution: "@exercism/javascript-browser-test-runner@npm:0.1.0"
-  checksum: 10c0/f28ac030886eed14dd8f6937f85bb109f5a7149470ccaf661daf18f7250762f7284c67ee73c3aef1f95b88d8f017a2eb7a039de849ad55b8331bd09d2ad60231
+"@exercism/javascript-browser-test-runner@npm:^0.7.0":
+  version: 0.7.0
+  resolution: "@exercism/javascript-browser-test-runner@npm:0.7.0"
+  checksum: 10c0/23429586e842541ca49da214ac56c3187c8502f9d3743279a90e89ff50191baef555236ba850b3d06d7794a1fccd5cb339083d9dd05b91d875097c0230b6fb9f
   languageName: node
   linkType: hard
 
@@ -16,6 +16,6 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "root-workspace-0b6124@workspace:."
   dependencies:
-    "@exercism/javascript-browser-test-runner": "npm:^0.1.0"
+    "@exercism/javascript-browser-test-runner": "npm:^0.7.0"
   languageName: unknown
   linkType: soft

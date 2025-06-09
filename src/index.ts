@@ -195,27 +195,33 @@ ${code[userPath]}
     const lines = tests[testPath].split("\n");
 
     // Delete globals import
-    lines.splice(
-      lines.findIndex(
-        (l) => l.indexOf("import ") !== -1 && l.indexOf("from '@jest/globals'"),
-      ),
-      1,
-      "// import { ... } from '@jest/globals'",
+    const globalsImportLineIndex = lines.findIndex(
+      (l) =>
+        l.indexOf("import ") !== -1 && l.indexOf("from '@jest/globals'") !== -1,
     );
+    if (globalsImportLineIndex !== -1) {
+      lines.splice(
+        globalsImportLineIndex,
+        1,
+        "// import { ... } from '@jest/globals'",
+      );
+    }
 
-    // Add test helper
-    lines.splice(
-      lines.findIndex((l) => l.indexOf("from ") !== -1) + 1,
-      0,
-      TEST_HELPER,
-    );
+    // Add test helper below main `import { ... } from './solution`
+    let injectIndex = lines.findIndex((l) => l.indexOf("from ") !== -1) + 1;
+    if (injectIndex === -1) {
+      lines.unshift(...TEST_HELPER);
+    } else {
+      lines.splice(injectIndex, 0, TEST_HELPER);
+    }
 
     // Add log listener
-    lines.splice(
-      lines.findIndex((l) => l.indexOf("from ") !== -1) + 1,
-      0,
-      `import { addListener as addLogListener } from '${globalLogger}'`,
-    );
+    const logImport = `import { addListener as addLogListener } from '${globalLogger}'`;
+    if (injectIndex === -1) {
+      lines.unshift(logImport);
+    } else {
+      lines.splice(injectIndex, 0, logImport);
+    }
 
     const importableTestCode = esm`${lines.join("\n")}`;
     urls.push(importableTestCode);
@@ -357,224 +363,3 @@ function promise(p) {
 
 export { run }
 `;
-
-/*
-class AssertionFailed extends Error {
-}
-
-function eq(a, b, aStack = [], bStack = [], customTesters = []) {
-  var result = true;
-
-  if (a instanceof Error && b instanceof Error) {
-    return a.message == b.message;
-  }
-
-  if (Object.is(a, b)) {
-    return true;
-  }
-  // A strict comparison is necessary because \`null == undefined\`.
-  if (a === null || b === null) {
-    return a === b;
-  }
-
-  var className = Object.prototype.toString.call(a);
-  if (className != Object.prototype.toString.call(b)) {
-    return false;
-  }
-
-  switch (className) {
-    case '[object Boolean]':
-    case '[object String]':
-    case '[object Number]':
-      if (typeof a !== typeof b) {
-        // One is a primitive, one a \`new Primitive()\`
-        return false;
-      } else if (typeof a !== 'object' && typeof b !== 'object') {
-        // both are proper primitives
-        return Object.is(a, b);
-      } else {
-        // both are \`new Primitive()\`s
-        return Object.is(a.valueOf(), b.valueOf());
-      }
-    case '[object Date]':
-      // Coerce dates to numeric primitive values. Dates are compared by their
-      // millisecond representations. Note that invalid dates with millisecond representations
-      // of \`NaN\` are not equivalent.
-      return +a == +b;
-    // RegExps are compared by their source patterns and flags.
-    case '[object RegExp]':
-      return a.source === b.source && a.flags === b.flags;
-  }
-  if (typeof a !== 'object' || typeof b !== 'object') {
-    return false;
-  }
-
-  // Add the first object to the stack of traversed objects.
-  aStack.push(a);
-  bStack.push(b);
-  var size = 0;
-  // Recursively compare objects and arrays.
-  // Compare array lengths to determine if a deep comparison is necessary.
-  if (className == '[object Array]') {
-    size = a.length;
-    if (size !== b.length) {
-      return false;
-    }
-
-    while (size--) {
-      result = eq(a[size], b[size], aStack, bStack, hasKey);
-      if (!result) {
-        return false;
-      }
-    }
-  }
-
-  // Deep compare objects.
-  var aKeys = keys(a, className == '[object Array]', hasKey),
-    key;
-  size = aKeys.length;
-
-  // Ensure that both objects contain the same number of properties before comparing deep equality.
-  if (keys(b, className == '[object Array]', hasKey).length !== size) {
-    return false;
-  }
-
-  while (size--) {
-    key = aKeys[size];
-
-    // Deep compare each member
-    result =
-      hasKey(b, key) &&
-      eq(a[key], b[key], aStack, bStack, customTesters, hasKey);
-
-    if (!result) {
-      return false;
-    }
-  }
-  // Remove the first object from the stack of traversed objects.
-  aStack.pop();
-  bStack.pop();
-
-  return result;
-}
-
-function keys(
-  obj,
-  isArray,
-  hasKey
-) {
-  var allKeys = (function(o) {
-    var keys = [];
-    for (var key in o) {
-      if (hasKey(o, key)) {
-        keys.push(key);
-      }
-    }
-    return keys.concat(
-      (Object.getOwnPropertySymbols(o)).filter(
-        symbol =>
-          (Object.getOwnPropertyDescriptor(o, symbol))
-            .enumerable,
-      ),
-    );
-  })(obj);
-
-  if (!isArray) {
-    return allKeys;
-  }
-
-  var extraKeys = [];
-  if (allKeys.length === 0) {
-    return allKeys;
-  }
-
-  for (var x = 0; x < allKeys.length; x++) {
-    if (typeof allKeys[x] === 'symbol' || !allKeys[x].match(/^[0-9]+$/)) {
-      extraKeys.push(allKeys[x]);
-    }
-  }
-
-  return extraKeys;
-}
-
-function hasKey(obj, key) {
-  return Object.prototype.hasOwnProperty.call(obj, key);
-}
-
-function expect(value) {
-
-  function promiseToBe(x) {
-    return promise(
-      value.then(
-        (resolved) => {
-          if (!eq(x, resolved)) {
-            throw new AssertionFailed(\`Expected \${JSON.stringify(resolved, undefined, 2)} to be \${x}\`)
-          }
-        }
-      )
-    )
-  }
-
-  function toBe(x) {
-    if (!eq(x, value)) {
-      throw new AssertionFailed(\`Expected \${value} to be \${x}\`)
-    }
-  }
-
-  return {
-    resolves: {
-      toBe: promiseToBe,
-      toEqual: promiseToBe,
-      toStrictEqual: promiseToBe
-      toBeUndefined: toBeUndefined
-    },
-    rejects: {
-      toThrow(x) {
-        return promise(
-          value.then(
-            () => {
-              throw new AssertionFailed(\`Expected error \${x}\`)
-            },
-            () => { }
-          )
-        )
-      }
-    },
-    toBeCloseTo(x, y = 0.01) {
-      if (Math.abs(value - x) <= y) {
-        return true
-      }
-
-      throw new AssertionFailed(\`Expected \${value} to be close to \${x}\`)
-    },
-    toBe: toBe,
-    toEqual: toBe,
-    toStrictEqual: toBe,
-    toBeUndefined:,
-    toBeNull:,
-    toThrow:,
-    toBeInstanceOf:,
-    toBeLessThanOrEqual:,
-    toBeGreaterThanOrEqual:,
-    toHaveLength:,
-    toHaveBeenCalled:,
-    toHaveBeenCalledTimes:,
-    toHaveBeenCalledWith:,
-
-    not: {
-      toBe:,
-      toEqual:,
-      toThrow:,
-
-      toHaveBeenCalled:
-    }
-  }
-}
-
-const jest = {
-  fn: ...
-}
-
-export { run }
-`;
-*/

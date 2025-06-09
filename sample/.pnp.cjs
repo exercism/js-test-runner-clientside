@@ -28,17 +28,17 @@ const RAW_RUNTIME_STATE =
       [null, {\
         "packageLocation": "./",\
         "packageDependencies": [\
-          ["@exercism/javascript-browser-test-runner", "npm:0.1.0"],\
+          ["@exercism/javascript-browser-test-runner", "npm:0.7.0"],\
           ["root-workspace-0b6124", "workspace:."]\
         ],\
         "linkType": "SOFT"\
       }]\
     ]],\
     ["@exercism/javascript-browser-test-runner", [\
-      ["npm:0.1.0", {\
-        "packageLocation": "../../../../../AppData/Local/Yarn/Berry/cache/@exercism-javascript-browser-test-runner-npm-0.1.0-525690cb1a-10c0.zip/node_modules/@exercism/javascript-browser-test-runner/",\
+      ["npm:0.7.0", {\
+        "packageLocation": "../../../../../AppData/Local/Yarn/Berry/cache/@exercism-javascript-browser-test-runner-npm-0.7.0-327f1ac13f-10c0.zip/node_modules/@exercism/javascript-browser-test-runner/",\
         "packageDependencies": [\
-          ["@exercism/javascript-browser-test-runner", "npm:0.1.0"]\
+          ["@exercism/javascript-browser-test-runner", "npm:0.7.0"]\
         ],\
         "linkType": "HARD"\
       }]\
@@ -47,7 +47,7 @@ const RAW_RUNTIME_STATE =
       ["workspace:.", {\
         "packageLocation": "./",\
         "packageDependencies": [\
-          ["@exercism/javascript-browser-test-runner", "npm:0.1.0"],\
+          ["@exercism/javascript-browser-test-runner", "npm:0.7.0"],\
           ["root-workspace-0b6124", "workspace:."]\
         ],\
         "linkType": "SOFT"\
