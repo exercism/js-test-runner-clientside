@@ -63,6 +63,39 @@ export function findUserCode(
   }, {});
 }
 
+export function findLibCode(
+  config: ExerciseConfig,
+  files: Record<string, string>,
+  userPaths: string[],
+): Record<string, string> {
+  if (!config.files.extra && !config.files.editor) {
+    return {};
+  }
+
+  let libPaths = Object.keys(files).filter((path) =>
+    (config.files.extra || []).some((pattern) => pattern.test(path)),
+  );
+
+  let editorPaths = Object.keys(files).filter((path) =>
+    (config.files.editor || []).some((pattern) => pattern.test(path)),
+  );
+
+  if (userPaths && editorPaths.some((path) => userPaths.includes(path))) {
+    throw new Error(
+      `Expected the provided non-solution files to not have changed. The user provided files (${userPaths.join(", ")}) overlaps with the configured read-only files (${editorPaths.join(", ")}).`,
+    );
+  }
+
+  return libPaths
+    .concat(editorPaths)
+    .reduce<Record<string, string>>((result, path) => {
+      if (Object.prototype.hasOwnProperty.call(files, path)) {
+        result[path] = files[path];
+      }
+      return result;
+    }, {});
+}
+
 export function findTestCode(
   config: ExerciseConfig,
   files: Record<string, string>,
@@ -72,8 +105,10 @@ export function findTestCode(
     config.files.test.some((pattern) => pattern.test(path)),
   );
 
-  if (userPaths) {
-    testPaths = testPaths.filter((path) => !userPaths?.includes(path));
+  if (userPaths && testPaths.some((path) => userPaths.includes(path))) {
+    throw new Error(
+      `Expected the provided non-solution files to not have changed. The user provided files (${userPaths.join(", ")}) overlaps with the configured test files (${testPaths.join(", ")}).`,
+    );
   }
 
   if (testPaths.length === 0) {
@@ -97,6 +132,7 @@ export type ExerciseConfig<Custom extends object = {}> = Readonly<{
     solution: readonly RegExp[];
     test: readonly RegExp[];
     exemplar: readonly RegExp[];
+    editor?: readonly RegExp[];
     extra?: readonly RegExp[];
   }>;
   blurb: string;

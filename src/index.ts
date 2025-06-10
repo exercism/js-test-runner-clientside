@@ -3,6 +3,7 @@
 import { generateOutput, type OutputInterface } from "./output";
 import type { FailedTestRun, TestRun } from "./types";
 import {
+  findLibCode,
   findTestCode,
   findUserCode,
   readConfig,
@@ -59,11 +60,23 @@ async function runTests_(
     testCodes[path] = transpile(testCodes[path], "test");
   }
 
+  // Get all the library code (strip user submitted)
+  const libraryCode = findLibCode(config, files, userPaths);
+  for (const path in libraryCode) {
+    libraryCode[path] = transpile(
+      libraryCode[path],
+      path.includes(".spec.") || path.includes(".test.") ? "test" : "code",
+    );
+  }
+
   const runOptions = {
     enableTaskIds: Boolean(config.custom["flag.tests.task-per-describe"]),
   };
 
-  const { entry, urls } = prepareTest(testCodes, userCodes, runOptions);
+  const { entry, urls } = prepareTest(
+    { test: testCodes, user: userCodes, shared: libraryCode },
+    runOptions,
+  );
 
   // Set some globals
   const globals = globalThis as Record<string, any>;
@@ -128,9 +141,42 @@ async function runTests_(
   return generateOutput(result, config.custom);
 }
 
+function makeImportReplaceMatcher(path: string) {
+  const userPathParts = path.split("/");
+  const fileName = userPathParts.pop() || "";
+  const fileNameParts = fileName.split(".");
+  fileNameParts.pop();
+
+  const importName = [...userPathParts, fileNameParts.join(".")].join("/");
+
+  return new RegExp(
+    `\\./${importName}(?:\\.(?:ts|js|mjs|cjs|mts|cts|tsx|jsx))?`,
+  );
+}
+
+function replaceImports(
+  { from, to }: { from: string; to: string },
+  ...collections: Record<string, string>[]
+) {
+  const matcher = makeImportReplaceMatcher(from);
+
+  for (const collection of collections) {
+    for (const key in collection) {
+      collection[key] = collection[key].replace(matcher, `${to}`);
+    }
+  }
+}
+
 function prepareTest(
-  tests: Record<string, string>,
-  code: Record<string, string>,
+  {
+    test,
+    user,
+    shared,
+  }: {
+    test: Record<string, string>;
+    user: Record<string, string>;
+    shared: Record<string, string>;
+  },
   options: { enableTaskIds: boolean } = { enableTaskIds: false },
 ): { entry: string; urls: string[] } {
   const globalLogger = esm`
@@ -161,11 +207,25 @@ function prepareTest(
 
   const urls: string[] = [];
 
-  for (const userPath in code) {
+  for (const sharedPath in shared) {
+    const sharedCode = shared[sharedPath];
+    const importableCode = esm`${sharedCode}`;
+    urls.push(importableCode);
+
+    // Shared files can be imported in tests, in shared files, and in user code
+    replaceImports(
+      { from: sharedPath, to: importableCode },
+      user,
+      test,
+      shared,
+    );
+  }
+
+  for (const userPath in user) {
     const userCode = `
 import { log } from '${globalLogger}'
 
-${code[userPath]}
+${user[userPath]}
   `;
 
     if (userCode.includes("module.exports = ")) {
@@ -177,24 +237,12 @@ ${code[userPath]}
     const importableCode = esm`${userCode}`;
     urls.push(importableCode);
 
-    const userPathParts = userPath.split("/");
-    const fileName = userPathParts.pop() || "";
-    const fileNameParts = fileName.split(".");
-    fileNameParts.pop();
-
-    const importName = [...userPathParts, fileNameParts.join(".")].join("/");
-
-    const regexp = new RegExp(
-      `\\./${importName}(?:\\.(?:ts|js|mjs|cjs|mts|cts|tsx|jsx))?`,
-    );
-
-    for (const testPath in tests) {
-      tests[testPath] = tests[testPath].replace(regexp, `${importableCode}`);
-    }
+    // User files can be imported in tests and in user code
+    replaceImports({ from: userPath, to: importableCode }, user, test);
   }
 
-  for (const testPath in tests) {
-    const lines = tests[testPath].split("\n");
+  for (const testPath in test) {
+    const lines = test[testPath].split("\n");
 
     // Delete globals import
     const globalsImportLineIndex = lines.findIndex(
@@ -227,6 +275,9 @@ ${code[userPath]}
 
     const importableTestCode = esm`${lines.join("\n")}`;
     urls.push(importableTestCode);
+
+    // Test files cannot be imported by anything
+    // replaceImports({ from: testPath, to: importableCode })
   }
 
   return { entry: urls[urls.length - 1], urls };
