@@ -9,6 +9,8 @@ import type {
 } from "./types";
 import { findLibCode, findTestCode, findUserCode, readConfig } from "./utils";
 
+export type * from "./types";
+
 import jestExpect from "expect";
 import jest from "jest-mock";
 
