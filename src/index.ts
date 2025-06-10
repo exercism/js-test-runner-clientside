@@ -1,52 +1,74 @@
-// const process = { env: { NODE_ENV: 'PRODUCTION' }, argv: [], version: "", cwd: () => ".", platform: '' };
-
-import { generateOutput, type OutputInterface } from "./output";
-import type { FailedTestRun, TestRun } from "./types";
-import {
-  findLibCode,
-  findTestCode,
-  findUserCode,
-  readConfig,
-  type CustomJavaScriptConfig,
-} from "./utils";
+import { generateOutput as generateJavaScriptOutput } from "./output";
+import type {
+  FailedTestRun,
+  GenerateOutputFn,
+  OutputOptions,
+  TestRun,
+  TranspileFn,
+  OutputInterface,
+} from "./types";
+import { findLibCode, findTestCode, findUserCode, readConfig } from "./utils";
 
 import jestExpect from "expect";
 import jest from "jest-mock";
+
+export function runTests(
+  _slug: string,
+  files: Record<string, string>,
+  userPaths: string[],
+): Promise<OutputInterface>;
+export function runTests(
+  _slug: string,
+  files: Record<string, string>,
+  userPaths: string[],
+  transpile: TranspileFn,
+): Promise<OutputInterface>;
+export function runTests(
+  _slug: string,
+  files: Record<string, string>,
+  userPaths: string[],
+  transpile: TranspileFn | undefined,
+  generateOutput: GenerateOutputFn<OutputOptions>,
+): Promise<OutputInterface>;
 
 export async function runTests(
   _slug: string,
   files: Record<string, string>,
   userPaths: string[],
-  transpile: (code: string, type: "code" | "test") => string = (code) => code,
+  transpile: TranspileFn = (code) => code,
+  generateOutput: GenerateOutputFn<OutputOptions> = generateJavaScriptOutput,
 ): Promise<OutputInterface> {
-  return runTests_(files, userPaths, transpile).catch((error: unknown) => {
-    let message: string;
+  return runTests_(files, userPaths, transpile, generateOutput).catch(
+    (error: unknown) => {
+      let message: string;
 
-    if (error instanceof Error) {
-      message = error.message;
-    } else if (Object.prototype.hasOwnProperty.call(error, "message")) {
-      message = String((error as { message: unknown }).message);
-    } else if (Object.prototype.hasOwnProperty.call(error, "toString")) {
-      message = (error as { toString(): string }).toString();
-    } else {
-      throw error;
-    }
+      if (error instanceof Error) {
+        message = error.message;
+      } else if (Object.prototype.hasOwnProperty.call(error, "message")) {
+        message = String((error as { message: unknown }).message);
+      } else if (Object.prototype.hasOwnProperty.call(error, "toString")) {
+        message = (error as { toString(): string }).toString();
+      } else {
+        throw error;
+      }
 
-    return {
-      version: 1,
-      status: "error",
-      message,
-      tests: [],
-    };
-  });
+      return {
+        version: 1,
+        status: "error",
+        message,
+        tests: [],
+      };
+    },
+  );
 }
 
 async function runTests_(
   files: Record<string, string>,
   userPaths: string[],
-  transpile: (code: string, type: "code" | "test") => string,
+  transpile: TranspileFn,
+  generateOutput: GenerateOutputFn<OutputOptions>,
 ) {
-  const config = readConfig<CustomJavaScriptConfig>(files);
+  const config = readConfig(files);
 
   // Get all user provided code
   const userCodes = findUserCode(config, files, userPaths);
@@ -70,7 +92,9 @@ async function runTests_(
   }
 
   const runOptions = {
-    enableTaskIds: Boolean(config.custom["flag.tests.task-per-describe"]),
+    enableTaskIds: Boolean(
+      config.custom && config.custom["flag.tests.task-per-describe"],
+    ),
   };
 
   const { entry, urls } = prepareTest(

@@ -1,3 +1,20 @@
+export type TranspileFn = (
+  code: string,
+  type: "code" | "test",
+  fileName?: string,
+  moduleName?: string,
+) => string;
+
+export interface OutputOptions {
+  "flag.tests.task-per-describe"?: boolean;
+  "flag.tests.includes-optional"?: boolean;
+}
+
+export type GenerateOutputFn<T extends OutputOptions = OutputOptions> = (
+  result: TestRun | FailedTestRun,
+  custom: T | undefined,
+) => Promise<OutputInterface>;
+
 export interface TestRun {
   failed: number;
   skipped: number;
@@ -17,6 +34,22 @@ export interface TestMessage {
   status: "failed" | "passed";
   details?: string;
   err?: Error;
+}
+
+export interface OutputInterface {
+  status: "fail" | "pass" | "error";
+  message: string;
+  tests: OutputTestInterface[];
+  version: 1 | 3;
+}
+
+export interface OutputTestInterface {
+  name: string;
+  status: "fail" | "pass" | "error";
+  message: string;
+  output: string | null;
+  test_code: string;
+  task_id?: number;
 }
 
 /**

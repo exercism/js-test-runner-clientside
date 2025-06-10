@@ -6,7 +6,7 @@
 yarn build
 ```
 
-Copy `imported.mjs` to `sample/unpkg.mjs` to run the sample.
+Copy `imported.mjs` to `sample` to run the sample.
 
 ## Run sample
 

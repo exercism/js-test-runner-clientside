@@ -1,34 +1,15 @@
-import type { FailedTestRun, TestResult, TestRun } from "./types";
+import type {
+  FailedTestRun,
+  TestRun,
+  OutputOptions,
+  OutputInterface,
+  OutputTestInterface,
+} from "./types";
 
-export interface OutputInterface {
-  status: "fail" | "pass" | "error";
-  message: string;
-  tests: OutputTestInterface[];
-  version: 1 | 3;
-}
-
-interface OutputTestInterface {
-  name: string;
-  status: "fail" | "pass" | "error";
-  message: string;
-  output: string | null;
-  test_code: string;
-  task_id?: number;
-}
-
-type ExerciseConfig = {
-  custom?: {
-    "version.tests.compatibility"?: "jest-27" | "jest-29";
-    "flag.tests.task-per-describe": boolean;
-    "flag.tests.may-run-long": boolean;
-    "flag.tests.includes-optional": boolean;
-  };
-};
-
-export function generateOutput(
+export async function generateOutput(
   testRun: TestRun | FailedTestRun,
-  options: ExerciseConfig["custom"],
-): OutputInterface {
+  options: OutputOptions | undefined,
+): Promise<OutputInterface> {
   if (!("completed" in testRun)) {
     return {
       status: "error",

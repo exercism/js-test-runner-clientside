@@ -1,6 +1,8 @@
+import type { OutputOptions } from "./types";
+
 type Writeable<T> = { -readonly [P in keyof T]: T[P] };
 
-export function readConfig<Custom extends object = {}>(
+export function readConfig<Custom extends OutputOptions = OutputOptions>(
   solutionFiles: Record<string, string>,
 ) {
   const configJson = solutionFiles[".meta/config.json"];
@@ -13,8 +15,13 @@ export function readConfig<Custom extends object = {}>(
   const { files, ...parsed } = JSON.parse(configJson) as Omit<
     ExerciseConfig<Custom>,
     "files"
-  > & { files: { [P in keyof ExerciseConfig["files"]]: readonly string[] } };
-  const config = { ...parsed, files: {} as Writeable<ExerciseConfig["files"]> };
+  > & {
+    files: { [P in keyof ExerciseConfig<Custom>["files"]]: readonly string[] };
+  };
+  const config = {
+    ...parsed,
+    files: {} as Writeable<ExerciseConfig<OutputOptions>["files"]>,
+  };
 
   (Object.keys(files) as Array<keyof typeof files>).forEach((key) => {
     config.files[key] = files[key]!.map(globToMatcher);
@@ -41,7 +48,7 @@ function globToMatcher(glob: string): RegExp {
 }
 
 export function findUserCode(
-  config: ExerciseConfig,
+  config: ExerciseConfig<OutputOptions>,
   files: Record<string, string>,
   userPaths: string[],
 ): Record<string, string> {
@@ -64,7 +71,7 @@ export function findUserCode(
 }
 
 export function findLibCode(
-  config: ExerciseConfig,
+  config: ExerciseConfig<OutputOptions>,
   files: Record<string, string>,
   userPaths: string[],
 ): Record<string, string> {
@@ -97,7 +104,7 @@ export function findLibCode(
 }
 
 export function findTestCode(
-  config: ExerciseConfig,
+  config: ExerciseConfig<OutputOptions>,
   files: Record<string, string>,
   userPaths?: string[],
 ): Record<string, string> {
@@ -125,19 +132,20 @@ export function findTestCode(
   }, {});
 }
 
-export type ExerciseConfig<Custom extends object = {}> = Readonly<{
-  authors: readonly string[];
-  contributors: readonly string[];
-  files: Readonly<{
-    solution: readonly RegExp[];
-    test: readonly RegExp[];
-    exemplar: readonly RegExp[];
-    editor?: readonly RegExp[];
-    extra?: readonly RegExp[];
+export type ExerciseConfig<Custom extends OutputOptions = OutputOptions> =
+  Readonly<{
+    authors: readonly string[];
+    contributors: readonly string[];
+    files: Readonly<{
+      solution: readonly RegExp[];
+      test: readonly RegExp[];
+      exemplar: readonly RegExp[];
+      editor?: readonly RegExp[];
+      extra?: readonly RegExp[];
+    }>;
+    blurb: string;
+    custom?: Custom;
   }>;
-  blurb: string;
-  custom: Custom;
-}>;
 
 export type CustomJavaScriptConfig = {
   "version.tests.compatibility": "jest-27" | "jest-29";
