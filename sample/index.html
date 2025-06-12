@@ -19,121 +19,331 @@
 
 <form id="form">
   <label for="usercode">User code</label>
-  <textarea name="files[lasagna.js]" id="usercode">
+  <textarea name="files[service.js]" id="usercode">
+/** @format */
+
+/// <reference path="./global.d.ts" />
 // @ts-check
-//
-// ☝🏽 The line above enables type checking for this file. Various IDEs interpret
-// the @ts-check directive. It will give you helpful autocompletion on the web
-// and supported IDEs when implementing this exercise. You don't need to
-// understand types, JSDoc, or TypeScript in order to complete this JavaScript
-// exercise, and can completely ignore this comment block and directive.
 
-// 👋🏽 Hi there!
-//
-// On the JavaScript track we provide you with stubs. These stubs provide a
-// starting point to solving the exercise.
-//
-// In general, each variable/constant and each declared function will have a
-// JSDoc comment block above it, explaining what the variable/constant holds or
-// the function is supposed to accomplish.
-//
-// 💡 Often, the JSDoc comment blocks have annotations, such as @param and
-// @returns which are usually highlighted with a different color if the IDE
-// you're in recognizes them. It's these annotations that are used when
-// referring to the constant, variable, or function from somewhere else that
-// IDEs display.
-//
-// You don't need to write these yourself; it is not expected in idiomatic
-// JavaScript, but some companies and style-guides do enforce them.
-//
-// 💡 You're allowed to completely clear a stub before you get started. Often
-// we recommend using the stub, because they are already set-up correctly to
-// work with the tests, which you can find in ./lasagna.spec.js
-//
-// Good luck preparing some lasagna!
+export class TranslationService {
+  /**
+   * Creates a new service
+   * @param {ExternalApi} api the original api
+   */
+  constructor(api) {
+    this.api = api;
+  }
 
-/**
-* The number of minutes it takes to prepare a single layer.
-*/
-const PREPARATION_MINUTES_PER_LAYER = 2;
+  /**
+   * Attempts to retrieve the translation for the given text.
+   *
+   * - Returns whichever translation can be retrieved, regardless the quality
+   * - Forwards any error from the translation api
+   *
+   * @param {string} text
+   * @returns {Promise&lt;string&gt;}
+   */
+  free(text) {
+    return this.api.fetch(text).then((res) => res.translation);
+  }
 
-/**
-* Determines the number of minutes the lasagna still needs to remain in the
-* oven to be properly prepared.
-*
-* @param {number} actualMinutesInOven
-* @returns {number} the number of minutes remaining
-*/
-export function remainingMinutesInOven(actualMinutesInOven) {
-  throw new Error('Remove this line and implement the function');
+  /**
+   * Batch translates the given texts using the free service.
+   *
+   * - Resolves all the translations (in the same order), if they all succeed
+   * - Rejects with the first error that is encountered
+   * - Rejects with a BatchIsEmpty error if no texts are given
+   *
+   * @param {string[]} texts
+   * @returns {Promise&lt;string[]&gt;}
+   */
+  batch(texts) {
+    if (texts.length === 0) return Promise.reject(new BatchIsEmpty());
+    return Promise.all(texts.map((text) => this.free(text)));
+  }
+
+  /**
+   * Requests the service for some text to be translated.
+   *
+   * Note: the request service is flaky, and it may take up to three times for
+   *       it to accept the request.
+   *
+   * @param {string} text
+   * @returns {Promise&lt;void&gt;}
+   */
+  request(text) {
+    const api = this.api;
+    function requestAsPromise(txt) {
+      return new Promise((resolve, reject) => {
+        api.request(txt, (err) => (err ? reject(err) : resolve()));
+      });
+    }
+
+    return requestAsPromise(text)
+      .catch(() => requestAsPromise(text))
+      .catch(() => requestAsPromise(text));
+  }
+
+  /**
+   * Retrieves the translation for the given text
+   *
+   * - Rejects with an error if the quality can not be met
+   * - Requests a translation if the translation is not available, then retries
+   *
+   * @param {string} text
+   * @param {number} minimumQuality
+   * @returns {Promise&lt;string&gt;}
+   */
+  premium(text, minimumQuality) {
+    return this.api
+      .fetch(text)
+      .catch(() => {
+        return this.request(text).then(() => this.api.fetch(text));
+      })
+      .then((res) => {
+        if (res.quality &lt; minimumQuality)
+          throw new QualityThresholdNotMet(text);
+        return res.translation;
+      });
+  }
 }
 
 /**
-* Given a number of layers, determines the total preparation time.
-*
-* @param {number} numberOfLayers
-* @returns {number} the total preparation time
-*/
-export function preparationTimeInMinutes(numberOfLayers) {
-  throw new Error('Remove this line and implement the function');
+ * This error is used to indicate a translation was found, but its quality does
+ * not meet a certain threshold. Do not change the name of this error.
+ */
+export class QualityThresholdNotMet extends Error {
+  /**
+   * @param {string} text
+   */
+  constructor(text) {
+    super(
+      `The translation of ${text} does not meet the requested quality threshold.`,
+    );
+
+    this.text = text;
+  }
 }
 
 /**
-* Calculates the total working time. That is, the time to prepare all the layers
-* of lasagna, and the time already spent in the oven.
-*
-* @param {number} numberOfLayers
-* @param {number} actualMinutesInOven
-* @returns {number} the total working time
-*/
-export function totalTimeInMinutes(numberOfLayers, actualMinutesInOven) {
-  throw new Error('Remove this line and implement the function');
-}
-</textarea
+ * This error is used to indicate the batch service was called without any
+ * texts to translate (it was empty). Do not change the name of this error.
+ */
+export class BatchIsEmpty extends Error {
+  constructor() {
+    super(
+      `Requested a batch translation, but there are no texts in the batch.`,
+    );
+  }
+}</textarea
   >
 
   <label for="testcode">Test code</label>
-  <textarea name="files[lasagna.spec.js]" id="testcode">
-import { describe, expect, test } from '@jest/globals';
+  <textarea name="files[service.spec.js]" id="testcode">
+import { beforeEach, describe, expect, test } from '@jest/globals';
 import {
-  EXPECTED_MINUTES_IN_OVEN,
-  preparationTimeInMinutes,
-  remainingMinutesInOven,
-  totalTimeInMinutes,
-} from './lasagna';
+  BatchIsEmpty,
+  QualityThresholdNotMet,
+  TranslationService,
+} from './service';
 
-describe('EXPECTED_MINUTES_IN_OVEN', () => {
-  test('constant is defined correctly', () => {
-    expect(EXPECTED_MINUTES_IN_OVEN).toBe(40);
+import { ExternalApi } from './api';
+import { ConnectionError, NotAvailable, Untranslatable } from './errors';
+
+describe('Free service', () => {
+  /** @type {TranslationService} */
+  let service;
+
+  beforeEach(() => {
+    const api = new ExternalApi()
+      .register('jIyaj', 'I understand', 100)
+      .register('jIyajbe’', null)
+      .register('jIyajbe’', "I don't understand", 100);
+
+    service = new TranslationService(api);
+  });
+
+  test('it can translate a known word group', async () => {
+    const actual = service.free('jIyaj');
+    const expected = 'I understand';
+
+    await expect(actual).resolves.toBe(expected);
+  });
+
+  test('it forwards NotAvailable errors from the API, unaltered', async () => {
+    const actual = service.free('jIyajbe’');
+    const expected = NotAvailable;
+
+    await expect(actual).rejects.toThrow(expected);
+  });
+
+  test('it forwards Untranslatable errors from the API, unaltered', async () => {
+    const actual = service.free('majQa’');
+    const expected = Untranslatable;
+
+    await expect(actual).rejects.toThrow(expected);
   });
 });
 
-describe('remainingMinutesInOven', () => {
-  test('calculates the remaining time', () => {
-    expect(remainingMinutesInOven(25)).toBe(15);
-    expect(remainingMinutesInOven(5)).toBe(35);
-    expect(remainingMinutesInOven(39)).toBe(1);
+describe('Batch service', () => {
+  /** @type {TranslationService} */
+  let service;
+
+  beforeEach(() => {
+    // jIyajbe’ will be marked as not yet translated, but is not translatable
+    const api = new ExternalApi({ 'jIyajbe’': [] })
+      .register('jIyaj', 'I understand', 100)
+      .register('majQa’', 'Well done!', 100);
+
+    service = new TranslationService(api);
   });
 
-  test('works correctly for the edge cases', () => {
-    expect(remainingMinutesInOven(40)).toBe(0);
-    expect(remainingMinutesInOven(0)).toBe(40);
+  test('it can translate a batch', async () => {
+    const actual = service.batch(['jIyaj', 'majQa’']);
+    const expected = ['I understand', 'Well done!'];
+
+    await expect(actual).resolves.toStrictEqual(expected);
+  });
+
+  test('it maintains the order of batch input', async () => {
+    const actual = service.batch(['majQa’', 'jIyaj']);
+    const expected = ['Well done!', 'I understand'];
+
+    await expect(actual).resolves.toStrictEqual(expected);
+  });
+
+  test('it works with just one item to translate', async () => {
+    const actual = service.batch(['jIyaj']);
+    const expected = ['I understand'];
+
+    await expect(actual).resolves.toStrictEqual(expected);
+  });
+
+  test('it throws if one or more translations fail', async () => {
+    const actual = service.batch(['jIyaj', 'jIyajbe’', 'majQa’']);
+    const expected = NotAvailable;
+
+    await expect(actual).rejects.toThrow(expected);
+  });
+
+  test('it throws on an empty input', async () => {
+    const actual = service.batch([]);
+    const expected = BatchIsEmpty;
+
+    await expect(actual).rejects.toThrow(expected);
   });
 });
 
-describe('preparationTimeInMinutes', () => {
-  test('calculates the preparation time', () => {
-    expect(preparationTimeInMinutes(1)).toBe(2);
-    expect(preparationTimeInMinutes(2)).toBe(4);
-    expect(preparationTimeInMinutes(8)).toBe(16);
+describe('Request service', () => {
+  /** @type {TranslationService} */
+  let service;
+
+  beforeEach(() => {
+    const api = new ExternalApi()
+      .register('majQa’', null)
+      .register('majQa’', 'Well done!', 100)
+      .register('jIyajbe’', null)
+      .register('jIyajbe’', null)
+      .register('jIyajbe’', null)
+      .register('jIyajbe’', "I don't understand", 100)
+      .register('ghobe’', null)
+      .register('ghobe’', null)
+      .register('ghobe’', null)
+      .register('ghobe’', null)
+      .register('ghobe’', 'No!', 100);
+
+    service = new TranslationService(api);
+  });
+
+  test('it can request something that is not available, but eventually is', async () => {
+    const actual = service.request('majQa’');
+    await expect(actual).resolves.toBeUndefined();
+  });
+
+  test('it eventually rejects when something is not translatable', async () => {
+    const actual = service.request('foo');
+    const expected = Untranslatable;
+
+    await expect(actual).rejects.toThrow(expected);
+  });
+
+  test('it requests up to three times (retries once or twice)', async () => {
+    const actual = service.request('jIyajbe’');
+    await expect(actual).resolves.toBeUndefined();
+  });
+
+  test('it requests at most three times (does not retry thrice or more)', async () => {
+    const actual = service.request('ghobe’');
+
+    await expect(actual).rejects.toThrow(ConnectionError);
   });
 });
 
-describe('totalTimeInMinutes', () => {
-  test('calculates the total cooking time', () => {
-    expect(totalTimeInMinutes(1, 5)).toBe(7);
-    expect(totalTimeInMinutes(4, 15)).toBe(23);
-    expect(totalTimeInMinutes(1, 30)).toBe(32);
+describe('Premium service', () => {
+  /** @type {TranslationService} */
+  let service;
+
+  beforeEach(() => {
+    const api = new ExternalApi()
+      .register('majQa’', 'Well done', 90)
+      .register('jIyajbe’', null)
+      .register('jIyajbe’', "I don't understand", 100)
+      .register('ghobe’', null)
+      .register('ghobe’', null)
+      .register('ghobe’', null)
+      .register('ghobe’', null)
+      .register('ghobe’', 'No!', 100)
+      .register('‘arlogh Qoylu’pu’?', null)
+      .register('‘arlogh Qoylu’pu’?', 'What time is it?', 75);
+
+    service = new TranslationService(api);
+  });
+
+  test('it can resolve a translation', async () => {
+    const actual = service.premium('majQa’', 0);
+    const expected = 'Well done';
+
+    await expect(actual).resolves.toBe(expected);
+  });
+
+  test('it requests unavailable translations and then resolves', async () => {
+    const actual = service.premium('jIyajbe’', 0);
+    const expected = "I don't understand";
+
+    await expect(actual).resolves.toBe(expected);
+  });
+
+  test('it rejects with Untranslatable if the premium service fails to translate', async () => {
+    const actual = service.premium('foo', 0);
+    const expected = Untranslatable;
+
+    await expect(actual).rejects.toThrow(expected);
+  });
+
+  test('it requests at most three times (does not retry thrice or more)', async () => {
+    const actual = service.premium('ghobe’', 0);
+
+    await expect(actual).rejects.toThrow(ConnectionError);
+  });
+
+  test('it recognizes sufficient quality', async () => {
+    const actual = service.premium('‘arlogh Qoylu’pu’?', 40);
+    const expected = 'What time is it?';
+
+    await expect(actual).resolves.toBe(expected);
+  });
+
+  test('it recognizes insufficient quality', async () => {
+    const actual = service.premium('majQa’', 100);
+    const expected = QualityThresholdNotMet;
+
+    await expect(actual).rejects.toThrow(expected);
+  });
+
+  test('it ensures the quality even after a request', async () => {
+    const actualQuality = service.premium('‘arlogh Qoylu’pu’?', 100);
+    const expectedQuality = QualityThresholdNotMet;
+    await expect(actualQuality).rejects.toThrow(expectedQuality);
   });
 });
 </textarea
@@ -146,23 +356,26 @@ describe('totalTimeInMinutes', () => {
     "SleeplessByte"
   ],
   "contributors": [
-    "junedev"
+    "AndrewLawendy",
+    "themetar"
   ],
   "files": {
     "solution": [
-      "lasagna.js"
+      "service.js"
     ],
     "test": [
-      "lasagna.spec.js"
+      "service.spec.js"
     ],
     "exemplar": [
       ".meta/exemplar.js"
+    ],
+    "editor": [
+      "api.js",
+      "errors.js",
+      "global.d.ts"
     ]
   },
-  "forked_from": [
-    "csharp/lasagna"
-  ],
-  "blurb": "Learn the basics of JavaScript cooking a brilliant lasagna from your favorite cooking book.",
+  "blurb": "Connect to the Klingon Translation Service and learn about promises.",
   "custom": {
     "version.tests.compatibility": "jest-27",
     "flag.tests.task-per-describe": true,
@@ -175,6 +388,197 @@ describe('totalTimeInMinutes', () => {
 
   <label for="slug">Slug</label>
   <input type="string" value="lasagna" name="slug" id="slug" />
+
+  <textarea hidden name="files[api.js]">
+import {
+  AbusiveClientError,
+  NotAvailable,
+  Untranslatable,
+  ConnectionError,
+} from './errors';
+
+const mutex = { current: false };
+
+/**
+ * @typedef {{ translation: string, quality: number }} Translation
+ * @typedef {Record<string, Array<null | Translation>>} TranslatableValues
+ *
+ */
+export class ExternalApi {
+  /**
+   * @param {Readonly<TranslatableValues>} values
+   */
+  constructor(values = {}) {
+    /** @type {TranslatableValues} */
+    this.values = JSON.parse(JSON.stringify(values));
+  }
+
+  /**
+   * Register a word for translation
+   *
+   * @param {string} value
+   * @param {string | null} translation
+   * @param {number | undefined} quality
+   *
+   * @returns {this}
+   */
+  register(value, translation, quality = undefined) {
+    if (typeof this.values[value] === 'undefined') {
+      this.values[value] = [];
+    }
+
+    this.values[value].push(translation ? { translation, quality } : null);
+    return this;
+  }
+
+  /**
+   * @param {string} text
+   * @returns {Promise<Translation>}
+   */
+  fetch(text) {
+    if (typeof text !== 'string') {
+      throw new BadRequest(
+        `Expected text when calling fetch(text), actual ${typeof text}.`,
+      );
+    }
+
+    // Check if client is banned
+    if (mutex.current) {
+      return rejectWithRandomDelay(new AbusiveClientError());
+    }
+
+    if (this.values[text] && this.values[text][0]) {
+      return resolveWithRandomDelay(this.values[text][0]);
+    }
+
+    if (this.values[text]) {
+      return rejectWithRandomDelay(new NotAvailable(text));
+    }
+
+    return rejectWithRandomDelay(new Untranslatable());
+  }
+
+  /**
+   * @param {string} text
+   * @param {(err?: Error) => void} callback
+   */
+  request(text, callback) {
+    if (typeof text !== 'string') {
+      throw new BadRequest(
+        `Expected string text when calling request(text, callback), actual ${typeof text}.`,
+      );
+    }
+
+    if (typeof callback !== 'function') {
+      throw new BadRequest(
+        `Expected callback function when calling request(text, callback), actual ${typeof callback}.`,
+      );
+    }
+
+    if (this.values[text] && this.values[text][0]) {
+      mutex.current = true;
+      callback(new AbusiveClientError());
+      return;
+    }
+
+    if (this.values[text]) {
+      setTimeout(() => {
+        this.values[text].shift();
+
+        // If it's now available, yay, otherwise, nay
+        callback(this.values[text][0] ? undefined : makeRandomError());
+      }, 1);
+      return;
+    }
+
+    callback(new Untranslatable());
+  }
+}
+
+function resolveWithRandomDelay(value) {
+  const timeout = Math.random() * 100;
+  return new Promise((resolve) => {
+    setTimeout(() => resolve(value), timeout);
+  });
+}
+
+function rejectWithRandomDelay(value) {
+  const timeout = Math.random() * 100;
+  return new Promise((_, reject) => {
+    setTimeout(() => reject(value), timeout);
+  });
+}
+
+function makeRandomError() {
+  return new ConnectionError(`Error code ${Math.ceil(Math.random() * 10000)}`);
+}
+
+class BadRequest extends Error {
+  constructor(message) {
+    super(message);
+  }
+}</textarea
+  >
+
+  <textarea hidden name="files[errors.js]">
+export class NotAvailable extends Error {
+  constructor(text) {
+    super(
+      `
+The requested text "${text}" has not been translated yet.
+    `.trim(),
+    );
+  }
+}
+
+export class AbusiveClientError extends Error {
+  constructor() {
+    super(
+      `
+Your client has been rejected because of abusive behaviour.
+
+naDevvo’ yIghoS!
+    `.trim(),
+    );
+  }
+}
+
+export class Untranslatable extends Error {
+  constructor() {
+    super('jIyajbe’');
+  }
+}
+
+export class ConnectionError extends Error {
+  constructor(message) {
+    super(message);
+  }
+}</textarea
+  >
+
+  <textarea hidden name="files[global.d.ts]">
+/**
+ * These are the shapes of the external service', the return values and the
+ * functions. Don't change these. In various IDEs, such as vscode, this will add
+ * type information on the fly
+ */
+
+interface ExternalApi {
+  fetch: fetchTranslation;
+  request: requestTranslation;
+}
+
+interface Translation {
+  translation: string;
+  quality: number;
+}
+
+type fetchTranslation = (text: string) => Promise<Translation>;
+type requestTranslation = (
+  text: string,
+  callback: (err?: Error) => void,
+) => void;</textarea
+  >
 
   <button>Submit</button>
 </form>
@@ -189,24 +593,21 @@ describe('totalTimeInMinutes', () => {
 
     const form = event.currentTarget;
     const slug = form.querySelector('input[name="slug"]').value;
-    const config = form.querySelector(
-      '[name="files[.meta/config.json]"]',
-    ).value;
-    const userCode = form.querySelector('[name="files[lasagna.js]"]').value;
-    const testCode = form.querySelector(
-      '[name="files[lasagna.spec.js]"]',
-    ).value;
 
-    const files = {
-      ".meta/config.json": config,
-      "lasagna.js": userCode,
-      "lasagna.spec.js": testCode,
-    };
+    const fileInputs = form.querySelectorAll('textarea[name^="files["]');
+    const files = {};
+    fileInputs.forEach((file) => {
+      const filePath = file
+        .getAttribute("name")
+        .replace(/^files\[/, "")
+        .replace(/\]$/, "");
+      files[filePath] = file.value;
+    });
 
     const output = document.getElementById("output");
     output.textContent = null;
 
-    runTests(slug, files, ["lasagna.js"]).then(
+    runTests(slug, files, ["service.js"]).then(
       (result) => (output.textContent = JSON.stringify(result, null, 2)),
     );
   }

@@ -1,10 +1,10 @@
-import type { OutputOptions } from "./types";
+import type { OutputOptions, TranspileFn } from "./types";
 
 type Writeable<T> = { -readonly [P in keyof T]: T[P] };
 
 export function readConfig<Custom extends OutputOptions = OutputOptions>(
   solutionFiles: Record<string, string>,
-) {
+): ExerciseConfig<Custom> {
   const configJson = solutionFiles[".meta/config.json"];
   if (!configJson) {
     throw new Error(
@@ -32,7 +32,7 @@ export function readConfig<Custom extends OutputOptions = OutputOptions>(
     (config as any).custom = {};
   }
 
-  return config as ExerciseConfig<Custom>;
+  return config;
 }
 
 function globToMatcher(glob: string): RegExp {
@@ -47,10 +47,46 @@ function globToMatcher(glob: string): RegExp {
   );
 }
 
+export type SolutionCode = {
+  test: Record<string, string>;
+  user: Record<string, string>;
+  shared: Record<string, string>;
+};
+
+export function findCode(
+  config: ExerciseConfig<OutputOptions>,
+  files: Readonly<Record<string, string>>,
+  userPaths: readonly string[],
+  transpile: TranspileFn,
+): SolutionCode {
+  // Get all user provided code
+  const userCodes = findUserCode(config, files, userPaths);
+  for (const path in userCodes) {
+    userCodes[path] = transpile(userCodes[path], "code");
+  }
+
+  // Get all test code (strip user submitted)
+  const testCodes = findTestCode(config, files, userPaths);
+  for (const path in testCodes) {
+    testCodes[path] = transpile(testCodes[path], "test");
+  }
+
+  // Get all the library code (strip user submitted)
+  const libraryCode = findLibCode(config, files, userPaths);
+  for (const path in libraryCode) {
+    libraryCode[path] = transpile(
+      libraryCode[path],
+      path.includes(".spec.") || path.includes(".test.") ? "test" : "code",
+    );
+  }
+
+  return { test: testCodes, shared: libraryCode, user: userCodes };
+}
+
 export function findUserCode(
   config: ExerciseConfig<OutputOptions>,
-  files: Record<string, string>,
-  userPaths: string[],
+  files: Readonly<Record<string, string>>,
+  userPaths: readonly string[],
 ): Record<string, string> {
   userPaths = userPaths.filter((path) =>
     config.files.solution.some((pattern) => pattern.test(path)),
@@ -72,8 +108,8 @@ export function findUserCode(
 
 export function findLibCode(
   config: ExerciseConfig<OutputOptions>,
-  files: Record<string, string>,
-  userPaths: string[],
+  files: Readonly<Record<string, string>>,
+  userPaths: readonly string[],
 ): Record<string, string> {
   if (!config.files.extra && !config.files.editor) {
     return {};
@@ -105,20 +141,18 @@ export function findLibCode(
 
 export function findTestCode(
   config: ExerciseConfig<OutputOptions>,
-  files: Record<string, string>,
-  userPaths?: string[],
+  files: Readonly<Record<string, string>>,
+  userPaths: readonly string[],
 ): Record<string, string> {
   let testPaths = Object.keys(files).filter((path) =>
     config.files.test.some((pattern) => pattern.test(path)),
   );
 
-  // TODO: turn on this check after exercise removes editor readonly files
-  //       from userPaths
-  /* if (userPaths && testPaths.some((path) => userPaths.includes(path))) {
+  if (userPaths && testPaths.some((path) => userPaths.includes(path))) {
     throw new Error(
       `Expected the provided non-solution files to not have changed. The user provided files (${userPaths.join(", ")}) overlaps with the configured test files (${testPaths.join(", ")}).`,
     );
-  }*/
+  }
 
   if (testPaths.length === 0) {
     throw new Error(
@@ -155,3 +189,14 @@ export type CustomJavaScriptConfig = {
   "flag.tests.may-run-long": boolean;
   "flag.tests.includes-optional": boolean;
 };
+
+export function importNameWithoutExtension(path: string, sep = "/"): string {
+  const userPathParts = path.split(sep);
+  const fileName = userPathParts.pop() || "";
+  const fileNameParts = fileName.split(".");
+  fileNameParts.pop();
+
+  const importName = [...userPathParts, fileNameParts.join(".")].join(sep);
+
+  return importName;
+}
