@@ -19,17 +19,20 @@ export function runTests(
   _slug: string,
   files: Record<string, string>,
   userPaths: string[],
+  signal?: AbortSignal,
 ): Promise<OutputInterface>;
 export function runTests(
   _slug: string,
   files: Record<string, string>,
   userPaths: string[],
+  signal: AbortSignal,
   transpile: TranspileFn,
 ): Promise<OutputInterface>;
 export function runTests(
   _slug: string,
   files: Record<string, string>,
   userPaths: string[],
+  signal: AbortSignal,
   transpile: TranspileFn | undefined,
   generateOutput: GenerateOutputFn<OutputOptions>,
 ): Promise<OutputInterface>;
@@ -38,39 +41,49 @@ export async function runTests(
   _slug: string,
   files: Record<string, string>,
   userPaths: string[],
+  signal?: AbortSignal,
   transpile: TranspileFn = (code) => code,
   generateOutput: GenerateOutputFn<OutputOptions> = generateJavaScriptOutput,
 ): Promise<OutputInterface> {
-  return runTests_(files, userPaths, transpile, generateOutput).catch(
-    (error: unknown) => {
-      let message: string;
+  return runJestTests({ files, userPaths }, signal, {
+    transpile,
+    generateOutput,
+  }).catch((error: unknown) => {
+    let message: string;
 
-      if (error instanceof Error) {
-        message = error.message;
-      } else if (Object.prototype.hasOwnProperty.call(error, "message")) {
-        message = String((error as { message: unknown }).message);
-      } else if (Object.prototype.hasOwnProperty.call(error, "toString")) {
-        message = (error as { toString(): string }).toString();
-      } else {
-        throw error;
-      }
+    if (error instanceof Error) {
+      message = error.message;
+    } else if (Object.prototype.hasOwnProperty.call(error, "message")) {
+      message = String((error as { message: unknown }).message);
+    } else if (Object.prototype.hasOwnProperty.call(error, "toString")) {
+      message = (error as { toString(): string }).toString();
+    } else {
+      throw error;
+    }
 
-      return {
-        version: 1,
-        status: "error",
-        message,
-        tests: [],
-      };
-    },
-  );
+    return {
+      version: 1,
+      status: "error",
+      message,
+      tests: [],
+    };
+  });
 }
 
-async function runTests_(
-  files: Record<string, string>,
-  userPaths: string[],
-  transpile: TranspileFn,
-  generateOutput: GenerateOutputFn<OutputOptions>,
+async function runJestTests(
+  solution: {
+    files: Record<string, string>;
+    userPaths: string[];
+  },
+  signal: undefined | AbortSignal,
+  callbacks: {
+    transpile: TranspileFn;
+    generateOutput: GenerateOutputFn<OutputOptions>;
+  },
 ) {
+  const { files, userPaths } = solution;
+  const { transpile, generateOutput } = callbacks;
+
   const config = readConfig(files);
 
   // Get all user provided code
@@ -110,48 +123,46 @@ async function runTests_(
   globals["expect"] = jestExpect;
   globals["jest"] = jest;
 
-  let timer: undefined | NodeJS.Timeout;
-  let interval: undefined | NodeJS.Timeout;
+  const references: {
+    timer: undefined | NodeJS.Timeout;
+    interval: undefined | NodeJS.Timeout;
+  } = {
+    timer: undefined,
+    interval: undefined,
+  };
 
   function cleanup() {
     console.debug("[suite] cleaning up run", urls);
     urls.forEach((objectUrl) => URL.revokeObjectURL(objectUrl));
 
-    clearInterval(interval);
-    clearTimeout(timer);
+    clearInterval(references.interval);
+    clearTimeout(references.timer);
 
     // Clear globals
     delete globals["expect"];
     delete globals["jest"];
   }
 
+  if (signal) {
+    if (signal.aborted) {
+      throw new Error("Run was aborted before it could start");
+    }
+  }
+
+  type ImportedTest = {
+    run: TestRun;
+  };
+
   const result = await import(/* webpackIgnore: true */ `${entry}`)
-    .then<TestRun>((result) => {
+    .then<TestRun>((result: ImportedTest) => {
       if (result.run.completed) {
         return result.run;
       }
 
-      return new Promise<TestRun>((resolve, reject) => {
-        timer = setTimeout(
-          () => {
-            clearInterval(interval);
+      const run = onCompletedRun(result.run, 100 * 10 * 30, references);
+      const abort = onAbortRun(signal);
 
-            reject(
-              new Error("Did not finish the tests within reasonable time"),
-            );
-          },
-          100 * 10 * 30 /* 30 seconds */,
-        );
-
-        interval = setInterval(() => {
-          if (result.run.completed) {
-            clearTimeout(timer);
-            clearInterval(interval);
-
-            resolve(result.run);
-          }
-        }, 100);
-      });
+      return Promise.race([run, abort]);
     })
     .catch<FailedTestRun>((error) => {
       console.error("[suite] failed to run the tests \n", error);
@@ -166,6 +177,48 @@ async function runTests_(
 
   // Generate output
   return generateOutput(result, config.custom);
+}
+
+function onCompletedRun(
+  run: TestRun,
+  timeout: number,
+  references: {
+    timer: undefined | NodeJS.Timeout;
+    interval: undefined | NodeJS.Timeout;
+  },
+) {
+  return new Promise<TestRun>((resolve, reject) => {
+    references.timer = setTimeout(() => {
+      clearInterval(references.interval);
+
+      reject(new Error("Did not finish the tests within reasonable time"));
+    }, timeout);
+
+    references.interval = setInterval(() => {
+      if (run.completed) {
+        clearTimeout(references.timer);
+        clearInterval(references.interval);
+
+        resolve(run);
+      }
+    }, 100);
+  });
+}
+
+function onAbortRun(signal: undefined | AbortSignal) {
+  return new Promise<TestRun>((reject) => {
+    if (!signal) {
+      return;
+    }
+
+    signal.addEventListener(
+      "abort",
+      (_) => reject(signal.reason || "Run was aborted before it could finish"),
+      {
+        once: true,
+      },
+    );
+  });
 }
 
 function makeImportReplaceMatcher(path: string) {
