@@ -149,12 +149,113 @@ async function runJestTests(
     }
   }
 
-  type ImportedTest = {
-    run: TestRun;
+  const result = await workerify(entry, signal, references);
+
+  cleanup();
+
+  // Wait an animation frame
+  await new Promise((resolve) => requestAnimationFrame(resolve));
+
+  // Generate output
+  return generateOutput(result, config.custom);
+}
+
+function supportsWorkerType() {
+  let supports = false;
+
+  const tester = {
+    get type() {
+      supports = true;
+      return "module" as const;
+    }, // it's been called, it's supported
   };
 
-  const result = await import(/* webpackIgnore: true */ `${entry}`)
-    .then<TestRun>((result: ImportedTest) => {
+  try {
+    // We use "blob://" as url to avoid an useless network request.
+    // This will either throw in Chrome
+    // either fire an error event in Firefox
+    // which is perfect since
+    // we don't need the worker to actually start,
+    // checking for the type of the script is done before trying to load it.
+    new Worker("data:", tester).terminate();
+  } catch {
+    // no-op
+  } finally {
+    return supports;
+  }
+}
+
+let __supportsModuleWorkers = { result: undefined as undefined | boolean };
+
+async function workerify(
+  entry: string,
+  signal: undefined | AbortSignal,
+  references: {
+    timer: undefined | NodeJS.Timeout;
+    interval: undefined | NodeJS.Timeout;
+  },
+) {
+  if (window.Worker && __supportsModuleWorkers.result === undefined) {
+    __supportsModuleWorkers.result = supportsWorkerType();
+  }
+
+  console.log(__supportsModuleWorkers);
+
+  // Worker variant
+  if (window.Worker && __supportsModuleWorkers.result) {
+    const workerCode = esm`
+      import { run } from "${entry}"
+
+      if (result.run.completed) {
+        console.log("completed right away")
+        postMessage(result.run)
+      }
+
+      const references = { timer: undefined, interval: undefined };
+
+      references.timer = setTimeout(() => {
+        clearInterval(references.interval);
+
+        postMessage(new Error("Did not finish the tests within reasonable time"));
+      }, 100 * 10 * 30);
+
+      references.interval = setInterval(() => {
+        if (run.completed) {
+          clearTimeout(references.timer);
+          clearInterval(references.interval);
+
+          console.log("completed within timeout")
+          postMessage(run);
+        }
+      }, 100);
+    `;
+
+    const testWorker = new Worker(workerCode, { type: "module" });
+    const run = new Promise<TestRun | FailedTestRun>((resolve, reject) => {
+      testWorker.addEventListener(
+        "message",
+        (ev) => {
+          console.log(ev);
+          if (typeof ev.data === "object" && "completed" in ev.data) {
+            resolve(ev.data as TestRun);
+          } else {
+            reject(ev.data as FailedTestRun);
+          }
+        },
+        { once: true },
+      );
+    });
+
+    const abort = onAbortRun(signal);
+    return Promise.race([run, abort]).finally(() => {
+      console.log("Done with run, terminating");
+      testWorker.terminate();
+    });
+  }
+
+  // Non-worker variant
+  return await import(/* webpackIgnore: true */ `${entry}`)
+    .then<TestRun>((result: { run: TestRun }) => {
       if (result.run.completed) {
         return result.run;
       }
@@ -169,14 +270,6 @@ async function runJestTests(
 
       return { ...({ message: error.message } as FailedTestRun) };
     });
-
-  cleanup();
-
-  // Wait an animation frame
-  await new Promise((resolve) => requestAnimationFrame(resolve));
-
-  // Generate output
-  return generateOutput(result, config.custom);
 }
 
 function onCompletedRun(
