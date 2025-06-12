@@ -112,11 +112,13 @@ export function findTestCode(
     config.files.test.some((pattern) => pattern.test(path)),
   );
 
-  if (userPaths && testPaths.some((path) => userPaths.includes(path))) {
+  // TODO: turn on this check after exercise removes editor readonly files
+  //       from userPaths
+  /* if (userPaths && testPaths.some((path) => userPaths.includes(path))) {
     throw new Error(
       `Expected the provided non-solution files to not have changed. The user provided files (${userPaths.join(", ")}) overlaps with the configured test files (${testPaths.join(", ")}).`,
     );
-  }
+  }*/
 
   if (testPaths.length === 0) {
     throw new Error(
