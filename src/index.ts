@@ -201,7 +201,7 @@ function onCompletedRun(
  * @returns promise that rejects when signal is aborted
  */
 function onAbortRun(signal: undefined | AbortSignal) {
-  return new Promise<TestRun>((reject) => {
+  return new Promise<TestRun>((_, reject) => {
     if (!signal) {
       return;
     }
