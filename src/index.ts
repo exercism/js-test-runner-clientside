@@ -15,6 +15,7 @@ export * from "./utils";
 
 import jestExpect from "expect";
 import jest from "jest-mock";
+import { workerize } from "./workerize";
 
 export function runTests(
   _slug: string,
@@ -133,22 +134,54 @@ async function runJestTests(
     run: TestRun;
   };
 
-  const result = await import(/* webpackIgnore: true */ `${entry}`)
-    .then<TestRun>((result: ImportedTest) => {
-      if (result.run.completed) {
-        return result.run;
-      }
+  const result = await workerize(
+    async function onWorker(worker: Worker): Promise<FailedTestRun | TestRun> {
+      const run = new Promise<FailedTestRun | TestRun>((resolve, reject) => {
+        worker.addEventListener(
+          "message",
+          (message) => {
+            console.debug("[main] worker completed run", message);
+            resolve(message.data);
+          },
+          { once: true },
+        );
+        worker.addEventListener(
+          "error",
+          (message) => {
+            console.error("[main] worker failed to complete run", message);
+            reject(message.error);
+          },
+          { once: true },
+        );
 
-      const run = onCompletedRun(result.run, 100 * 10 * 30, references);
+        // Start the tests
+        worker.postMessage({ entry, timeout: 100 * 10 * 30 });
+      });
       const abort = onAbortRun(signal);
 
-      return Promise.race([run, abort]);
-    })
-    .catch<FailedTestRun>((error) => {
-      console.error("[suite] failed to run the tests \n", error);
+      return Promise.race([run, abort]).finally(() => {
+        worker.terminate();
+      });
+    },
+    async function onInline() {
+      return import(`${entry}`)
+        .then<TestRun>((result: ImportedTest) => {
+          if (result.run.completed) {
+            return result.run;
+          }
 
-      return { ...({ message: error.message } as FailedTestRun) };
-    });
+          const run = onCompletedRun(result.run, 100 * 10 * 30, references);
+          const abort = onAbortRun(signal);
+
+          return Promise.race([run, abort]);
+        })
+        .catch<FailedTestRun>((error) => {
+          console.error("[suite] failed to run the tests \n", error);
+
+          return { ...({ message: error.message } as FailedTestRun) };
+        });
+    },
+  );
 
   cleanup();
 
