@@ -1,5 +1,4 @@
 import type { FailedTestRun, TestRun } from "./types";
-import { esm } from "./utils";
 
 export function workerize(
   onWorker: (worker: Worker) => Promise<TestRun | FailedTestRun>,
@@ -53,15 +52,13 @@ function supportsWorkerType() {
   };
 
   try {
-    // We use "blob://" as url to avoid an useless network request.
-    // This will either throw in Chrome
-    // either fire an error event in Firefox
-    // which is perfect since
-    // we don't need the worker to actually start,
-    // checking for the type of the script is done before trying to load it.
+    // We use "data:" as url to avoid an useless network request. This will
+    // either throw in Chrome, or fire an error event in Firefox, which is
+    // perfect since we don't need the worker to actually start.
+    //
+    // Checking for the type of the script is done before trying to load it.
     new Worker("data:", tester).terminate();
   } catch {
-    // no-op
     __supportsModuleWorkers.result = false;
   } finally {
     return Boolean(__supportsModuleWorkers.result);
