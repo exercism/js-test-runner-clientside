@@ -358,8 +358,10 @@ async function afterAll(func) {
 }
 
 async function test(name, c) {
+  const withTaskId = run.taskId
+
   run.current = run.current.then(() => {
-    return promise(queueTest(name, c))
+    return promise(queueTest(name, c, withTaskId))
   })
 
   return run.current;
@@ -394,13 +396,11 @@ function promise(p) {
   return p
 }
 
-async function queueTest(name, c) {
+async function queueTest(name, c, taskId) {
   console.debug(\`[start] \${name}\`)
   for (const fn of beforeEachFns) {
     await fn()
   }
-
-  const taskId = run.taskId
 
   if (failFast && run.failed > 0) {
     skipTest()

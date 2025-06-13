@@ -452,8 +452,6 @@ function finishSuite() {
     return console.debug(\`[suite] still running, awaiting \${awaiting}\`)
   }
 
-  debugger;
-
   run.result = run.failed === 0 ? 'passed' : 'failed'
 	run.completed = true
 
@@ -479,8 +477,10 @@ async function afterAll(func) {
 }
 
 async function test(name, c) {
+  const withTaskId = run.taskId
+
   run.current = run.current.then(() => {
-    return promise(queueTest(name, c))
+    return promise(queueTest(name, c, withTaskId))
   })
 
   return run.current;
@@ -515,13 +515,11 @@ function promise(p) {
   return p
 }
 
-async function queueTest(name, c) {
+async function queueTest(name, c, taskId) {
   console.debug(\`[start] \${name}\`)
   for (const fn of beforeEachFns) {
     await fn()
   }
-
-  const taskId = run.taskId
 
   if (failFast && run.failed > 0) {
     skipTest()
@@ -546,7 +544,7 @@ async function queueTest(name, c) {
 
 export { run }
 `;var Nd=$a(Md()),kd=$a($d());async function ZT(e,t,r,n,i=s=>s,a=ja){return QR({files:t,userPaths:r},n,{transpile:i,generateOutput:a}).catch(s=>{let u;if(s instanceof Error)u=s.message;else if(Object.prototype.hasOwnProperty.call(s,"message"))u=String(s.message);else if(Object.prototype.hasOwnProperty.call(s,"toString"))u=s.toString();else throw s;return{version:1,status:"error",message:u,tests:[]}})}o(ZT,"runTests");async function QR(e,t,r){let{files:n,userPaths:i}=e,{transpile:a,generateOutput:s}=r,u=Ua(n),c=Ha(u,n,i,a),d={enableTaskIds:!!(u.custom&&u.custom["flag.tests.task-per-describe"])},{entry:p,urls:g}=Ga(c,d),m=globalThis;m.expect=Nd.default,m.jest=kd.default;let b={timer:void 0,interval:void 0};function E(){console.debug("[suite] cleaning up run",g),g.forEach(x=>URL.revokeObjectURL(x)),clearInterval(b.interval),clearTimeout(b.timer),delete m.expect,delete m.jest}if(o(E,"cleanup"),t&&t.aborted)throw new Error("Run was aborted before it could start");let _=await import(`${p}`).then(x=>{if(x.run.completed)return x.run;let B=YR(x.run,100*10*30,b),$=JR(t);return Promise.race([B,$])}).catch(x=>(console.error(`[suite] failed to run the tests 
-`,x),{message:x.message}));return E(),await new Promise(x=>requestAnimationFrame(x)),s(_,u.custom)}o(QR,"runJestTests");function YR(e,t,r){return new Promise((n,i)=>{r.timer=setTimeout(()=>{clearInterval(r.interval),i(new Error("Did not finish the tests within reasonable time"))},t),r.interval=setInterval(()=>{e.completed&&(clearTimeout(r.timer),clearInterval(r.interval),n(e))},100)})}o(YR,"onCompletedRun");function JR(e){return new Promise(t=>{if(e){if(e.aborted)return t(e.reason||"Run was aborted before it could finish");e.addEventListener("abort",r=>t(e.reason||"Run was aborted before it could finish"),{once:!0})}})}o(JR,"onAbortRun");export{Ha as findCode,ah as findLibCode,uh as findTestCode,sh as findUserCode,qa as importNameWithoutExtension,Ua as readConfig,ZT as runTests};
+`,x),{message:x.message}));return E(),await new Promise(x=>requestAnimationFrame(x)),s(_,u.custom)}o(QR,"runJestTests");function YR(e,t,r){return new Promise((n,i)=>{r.timer=setTimeout(()=>{clearInterval(r.interval),i(new Error("Did not finish the tests within reasonable time"))},t),r.interval=setInterval(()=>{e.completed&&(clearTimeout(r.timer),clearInterval(r.interval),n(e))},100)})}o(YR,"onCompletedRun");function JR(e){return new Promise((t,r)=>{if(e){if(e.aborted)return r(e.reason||"Run was aborted before it could finish");e.addEventListener("abort",n=>r(e.reason||"Run was aborted before it could finish"),{once:!0})}})}o(JR,"onAbortRun");export{Ha as findCode,ah as findLibCode,uh as findTestCode,sh as findUserCode,qa as importNameWithoutExtension,Ua as readConfig,ZT as runTests};
 /*! Bundled license information:
 
 @jspm/core/nodelibs/browser/chunk-DtuTasat.js:
