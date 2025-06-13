@@ -20,6 +20,7 @@ export * from "./utils";
 
 import jestExpect from "expect";
 import jest from "jest-mock";
+import { workerize } from "./workerize";
 
 export function runTests(
   _slug: string,
@@ -134,36 +135,24 @@ async function runJestTests(
     }
   }
 
-  type ImportedTest = {
-    run: TestRun;
-  };
+  const result = await workerize(
+    makeWorkerRunner(entry, signal),
+    makeMainThreadRunner(entry, signal, references),
+  ).catch<FailedTestRun>((error: unknown) => {
+    console.error("[suite] failed to run the tests \n", error);
 
-  const result = await import(/* webpackIgnore: true */ `${entry}`)
-    .then<TestRun>((result: ImportedTest) => {
-      if (result.run.completed) {
-        return result.run;
+    if (error && typeof error === "object" && "message" in error) {
+      let message = String(error.message);
+
+      for (const [originalPath, module] of Object.entries(urls)) {
+        message = message.replaceAll(module, originalPath);
       }
 
-      const run = onCompletedRun(result.run, 100 * 10 * 30, references);
-      const abort = onAbortRun(signal);
+      return { ...({ message } as FailedTestRun) };
+    }
 
-      return Promise.race([run, abort]);
-    })
-    .catch<FailedTestRun>((error: unknown) => {
-      console.error("[suite] failed to run the tests \n", error);
-
-      if (error && typeof error === "object" && "message" in error) {
-        let message = String(error.message);
-
-        for (const [originalPath, module] of Object.entries(urls)) {
-          message = message.replaceAll(module, originalPath);
-        }
-
-        return { ...({ message } as FailedTestRun) };
-      }
-
-      throw new BrowserTestRunnerError(`Something went wrong: ${error}`);
-    });
+    throw new BrowserTestRunnerError(`Something went wrong: ${error}`);
+  });
 
   cleanup();
 
@@ -172,6 +161,66 @@ async function runJestTests(
 
   // Generate output
   return generateOutput(result, config.custom);
+}
+
+function makeWorkerRunner(entry: string, signal?: AbortSignal) {
+  return async function onWorker(
+    worker: Worker,
+  ): Promise<FailedTestRun | TestRun> {
+    const run = new Promise<FailedTestRun | TestRun>((resolve, reject) => {
+      worker.addEventListener(
+        "message",
+        (message) => {
+          console.debug("[main] worker completed run", message);
+          resolve(message.data);
+        },
+        { once: true },
+      );
+
+      worker.addEventListener(
+        "error",
+        (message) => {
+          console.error("[main] worker failed to complete run", message);
+          reject(message.error);
+        },
+        { once: true },
+      );
+
+      // Start the tests
+      worker.postMessage({ entry, timeout: 100 * 10 * 30 });
+    });
+    const abort = onAbortRun(signal);
+
+    return Promise.race([run, abort]).finally(() => {
+      worker.terminate();
+    });
+  };
+}
+
+type ImportedTest = {
+  run: TestRun;
+};
+
+function makeMainThreadRunner(
+  entry: string,
+  signal: AbortSignal | undefined,
+  references: {
+    timer: undefined | NodeJS.Timeout;
+    interval: undefined | NodeJS.Timeout;
+  },
+) {
+  return async function onInline() {
+    return import(`${entry}`).then<TestRun>(({ run }: ImportedTest) => {
+      if (run.completed) {
+        return run;
+      }
+
+      const runPromise = onCompletedRun(run, 100 * 10 * 30, references);
+      const abortPromise = onAbortRun(signal);
+
+      return Promise.race([runPromise, abortPromise]);
+    });
+  };
 }
 
 /**

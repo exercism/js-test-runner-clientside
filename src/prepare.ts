@@ -1,21 +1,5 @@
 import { SubmissionError, UnsupportedError } from "./errors";
-import { importNameWithoutExtension, SolutionCode } from "./utils";
-
-/**
- * Turns code into an ES Module (blob) so it can be references on the web
- * without requiring to exist on disk / url.
- *
- * Do not forget to clean up the blob after it's no longer necessary.
- *
- * @param code
- * @returns blob://<....>
- */
-const esm = ({ raw }: TemplateStringsArray, ...vals: string[]) =>
-  URL.createObjectURL(
-    new Blob([String.raw({ raw } as any, ...vals)], {
-      type: "text/javascript",
-    }),
-  );
+import { esm, importNameWithoutExtension, SolutionCode } from "./utils";
 
 export type PrepareOptions = { enableTaskIds: boolean };
 export type PreparedCode = {
@@ -383,7 +367,7 @@ function failTest(taskId, name, err) {
   run.messages[taskId] ||= []
   run.messages[taskId].push({ test: name, status: 'failed', details: err.message, err: err })
 
-	window.lastErr = err
+	globalThis.lastErr = err
 
   if (err.constructor.name === 'JestAssertionError') {
     console.error(\`[test] failed assertion of \${name}.\\n\`, err.message)
