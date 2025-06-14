@@ -67,4 +67,25 @@ await Promise.all([
     keepNames: true,
     minify: true,
   }),
+  build({
+    inject: ["./build/process-shim.js", "./build/mock-window.js"],
+    entryPoints: ["src/worker.ts"],
+    outfile: "output/javascript-browser-test-runner-worker.mjs",
+    bundle: true,
+    platform: "browser",
+    target: browserslistToEsbuild(),
+    format: "esm",
+    plugins: [
+      nodeModulesPolyfillPlugin({
+        globals: {
+          process: true,
+          Buffer: true,
+        },
+      }),
+      mockFsPlugin,
+    ],
+    sourcemap: true,
+    keepNames: true,
+    minify: true,
+  }),
 ]);
