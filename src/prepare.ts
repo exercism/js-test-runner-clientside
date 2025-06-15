@@ -367,9 +367,12 @@ async function test(name, c) {
   return run.current;
 }
 
+test.skip = skipTest
+
 const xtest = test
 const it = test
 const xit = test
+
 
 async function describe(name, c) {
   runSuite(name)
@@ -387,6 +390,10 @@ async function describe(name, c) {
 
   await run.current
   finishSuite()
+}
+
+describe.skip = (name, _c) => {
+  throw new Error('An entire test section (describe block) is skipped, which is not supported.')
 }
 
 const xdescribe = describe
