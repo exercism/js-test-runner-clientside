@@ -35,13 +35,71 @@ export function prepare(
   options: PrepareOptions = { enableTaskIds: false },
 ): PreparedCode {
   const globalLogger = esm`${LOGGER}`;
+  const urls: string[] = [globalLogger];
+
+  // Conditionally enable mocking
+  const hasMocks = Object.values(code.test).some((testContent) =>
+    testContent.includes("jest.mock("),
+  );
+
+  if (hasMocks) {
+    // const mocker = esm`${MOCKER}`;
+    // urls.push(mocker);
+
+    const mockedModules: string[] = [];
+    const matcher = /jest\.mock\(["'](?:\.\/)(.*)["'],/g;
+
+    Object.values(code.test).forEach((testContent) => {
+      const matches = Array.from(testContent.matchAll(matcher));
+      matches.forEach((match) => {
+        if (match[1]) {
+          mockedModules.push(match[1]);
+        }
+      });
+    });
+
+    // Remove mocked modules from source list
+    for (const sharedPath in code.shared) {
+      if (mockedModules.includes(importNameWithoutExtension(sharedPath))) {
+        delete code.shared[sharedPath];
+        console.debug(`[mock] ${sharedPath} will be mocked`);
+      }
+    }
+
+    // Remove mocked imports
+    for (const collection of Object.values(code)) {
+      for (const [path, content] of Object.entries(collection)) {
+        {
+          // Remove import
+          const lines = content.split("\n");
+
+          for (const mockedModule of mockedModules) {
+            const importIndex = lines.findIndex(
+              (line) =>
+                line.startsWith("import ") &&
+                line.includes(`./${mockedModule}`),
+            );
+
+            if (importIndex === -1) {
+              continue;
+            }
+
+            lines.splice(importIndex, 1, `// ${lines[importIndex]}`);
+            collection[path] = lines.join("\n");
+            console.debug(
+              `[mock] disabled ${mockedModule} import in ${path} as it will be mocked`,
+            );
+          }
+        }
+      }
+    }
+  }
 
   const {
     code: { test, user, shared },
     dependencyOrder,
   } = makeDependencyGraph(code);
 
-  const urls: string[] = [globalLogger];
   let entry: string = "";
 
   // Enable logger for user code
@@ -188,7 +246,7 @@ function makeDependencyGraph(code: {
     }
   }
 
-  console.log(dependencyOrder);
+  console.debug(`[prepare] built dependency tree`, dependencyOrder);
 
   return { code, dependencyOrder };
 }
@@ -251,6 +309,18 @@ export function addListener(listener) {
       listeners.splice(index, 1);
     }
   }
+}
+`;
+
+/**
+ * Code that exports a live binding so that things can be mocked in multiple
+ * modules.
+ */
+const MOCKER = `
+const mocks = {}
+
+export function register(name, value) {
+  mocks[name] = value
 }
 `;
 
@@ -373,7 +443,6 @@ const xtest = test
 const it = test
 const xit = test
 
-
 async function describe(name, c) {
   runSuite(name)
 
@@ -428,6 +497,15 @@ async function queueTest(name, c, taskId) {
   }
 
   console.debug(\`[end] \${name}\`)
+}
+
+jest.mock = function mock(_moduleName, mocker) {
+  const mocked = mocker();
+
+  Object.entries(mocked).forEach(([key, value]) => {
+    globalThis[key] = value
+    console.debug(\`[mocked] \${key} from \${_moduleName}\`)
+  })
 }
 
 export { run }

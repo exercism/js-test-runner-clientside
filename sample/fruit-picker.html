@@ -1,0 +1,286 @@
+<style>
+  form {
+    display: flex;
+    flex-direction: column;
+
+    max-width: 65ch;
+
+    textarea {
+      field-sizing: content;
+    }
+  }
+
+  output {
+    color: red;
+    font-family: monospace;
+    white-space: pre;
+  }
+</style>
+
+<form id="form">
+  <label for="usercode">User code</label>
+  <textarea
+    name="files[fruit-picker.js]"
+    id="usercode">
+/// <reference path="../global.d.ts" />
+//
+// @ts-check
+
+import { notify } from './notifier';
+import { order } from './grocer';
+
+/**
+ * @return void
+ */
+export function onSuccess() {
+  notify({ message: 'SUCCESS' });
+}
+
+/**
+ * @return void
+ */
+export function onError() {
+  notify({ message: 'ERROR' });
+}
+
+/**
+ * @param {GrocerQuery} query
+ * @param {FruitPickerSuccessCallback} onSuccessCallback
+ * @param {FruitPickerErrorCallback} onErrorCallback
+ * @return void
+ */
+export function orderFromGrocer(query, onSuccessCallback, onErrorCallback) {
+  order(query, onSuccessCallback, onErrorCallback);
+}
+
+/**
+ * @param {string} variety
+ * @param {number} quantity
+ * @return void
+ */
+export function postOrder(variety, quantity) {
+  orderFromGrocer({ variety, quantity }, onSuccess, onError);
+}
+</textarea
+  >
+
+  <label for="testcode">Test code</label>
+  <textarea
+    name="files[fruit-picker.spec.js]"
+    id="testcode">
+import { afterEach, describe, expect, test, jest } from '@jest/globals';
+import { onError, onSuccess, orderFromGrocer, postOrder } from './fruit-picker';
+import { order } from './grocer';
+import { notify } from './notifier';
+
+jest.mock('./notifier', () => ({
+  notify: jest.fn(),
+}));
+
+jest.mock('./grocer', () => ({
+  order: jest.fn(),
+}));
+
+afterEach(() => {
+  jest.resetAllMocks();
+});
+
+describe('task 1', () => {
+  test('onSuccess should call notify with a success message', () => {
+    expect(onSuccess()).toEqual(undefined);
+    expect(notify).toHaveBeenCalledTimes(1);
+    expect(notify).toHaveBeenCalledWith({ message: 'SUCCESS' });
+  });
+});
+
+describe('task 2', () => {
+  test('onError should call notify with an error message', () => {
+    expect(onError()).toEqual(undefined);
+    expect(notify).toHaveBeenCalledTimes(1);
+    expect(notify).toHaveBeenCalledWith({ message: 'ERROR' });
+  });
+});
+
+describe('task 3', () => {
+  test('orderFromGrocer passes query and callback function arguments forward', () => {
+    const query = { variety: 'apple', quantity: 10 };
+    orderFromGrocer(query, onSuccess, onError);
+    expect(order).toHaveBeenCalledTimes(1);
+    expect(order).toHaveBeenCalledWith(query, onSuccess, onError);
+  });
+});
+
+describe('task 4', () => {
+  test('postOrder composes a request to the grocer using the defined callbacks', () => {
+    const variety = 'banana';
+    const quantity = 5;
+    postOrder(variety, quantity);
+
+    expect(order).toHaveBeenCalledTimes(1);
+    expect(order).toHaveBeenCalledWith(
+      { variety, quantity },
+      onSuccess,
+      onError,
+    );
+  });
+});
+</textarea
+  >
+
+  <label for="config">Config</label>
+  <textarea
+    name="files[.meta/config.json]"
+    id="config">
+{
+  "authors": [
+    "neenjaw"
+  ],
+  "contributors": [
+    "SleeplessByte"
+  ],
+  "files": {
+    "solution": [
+      "fruit-picker.js"
+    ],
+    "test": [
+      "fruit-picker.spec.js"
+    ],
+    "exemplar": [
+      ".meta/exemplar.js"
+    ],
+    "editor": [
+      "notifier.js",
+      "grocer.js"
+    ]
+  },
+  "blurb": "Learn about callbacks ordering fruit from the grocer",
+  "custom": {
+    "version.tests.compatibility": "jest-27",
+    "flag.tests.task-per-describe": true,
+    "flag.tests.may-run-long": false,
+    "flag.tests.includes-optional": false
+  }
+}
+</textarea
+  >
+
+  <label for="slug">Slug</label>
+  <input
+    type="string"
+    value="lasagna"
+    name="slug"
+    id="slug" />
+
+  <textarea
+    hidden
+    name="files[notifier.js]">
+/**
+ * @param {FruitPickerSuccess | FruitPickerError} message
+ * @return void
+ */
+export function notify(message) {
+  // This is a mocked function for use with the exercise.
+  message;
+}
+</textarea
+  >
+
+  <textarea
+    hidden
+    name="files[grocer.js]">
+/**
+ * @param {GrocerQuery} query
+ * @param {GrocerOnSuccessCallback} onSuccess
+ * @param {GrocerOnErrorCallback} onError
+ * @return void
+ */
+export function order(query, onSuccess, onError) {
+  // This is a mocked function for use with the exercise.
+  query;
+  onSuccess;
+  onError;
+}</textarea
+  >
+
+  <textarea
+    hidden
+    name="files[global.d.ts]">
+/**
+ * These are the shapes of the external grocer service', the return values and the
+ * functions. Don't change these. In various IDEs, such as vscode, this will add
+ * type information on the fly
+ */
+
+type FruitPickerSuccess = {
+  message: 'SUCCESS';
+};
+
+type FruitPickerError = {
+  message: 'ERROR';
+};
+
+declare module 'notifier' {
+  function notify(message: FruitPickerSuccess | FruitPickerError): void;
+}
+
+type GrocerQuery = {
+  variety: string;
+  quantity: number;
+};
+
+interface GrocerOnSuccessCallback {
+  (quantityOrdered: number): void;
+}
+
+interface GrocerOnErrorCallback {
+  (errorMessage: string): void;
+}
+
+declare module 'grocer' {
+  function order(
+    query: GrocerQuery,
+    onSuccess: GrocerOnSuccessCallback,
+    onError: GrocerOnErrorCallback,
+  ): void;
+}
+
+type FruitPickerSuccessCallback = () => SuccessResult;
+
+type FruitPickerErrorCallback = () => ErrorResult;</textarea
+  >
+
+  <button>Submit</button>
+</form>
+
+<output id="output"> </output>
+
+<script type="module">
+  import { runTests } from "./imported.mjs";
+
+  function onRunTests(event) {
+    event.preventDefault();
+
+    const form = event.currentTarget;
+    const slug = form.querySelector('input[name="slug"]').value;
+
+    const fileInputs = form.querySelectorAll('textarea[name^="files["]');
+    const files = {};
+    fileInputs.forEach((file) => {
+      const filePath = file
+        .getAttribute("name")
+        .replace(/^files\[/, "")
+        .replace(/\]$/, "");
+      files[filePath] = file.value;
+    });
+
+    const output = document.getElementById("output");
+    output.textContent = null;
+
+    runTests(slug, files, ["fruit-picker.js"]).then(
+      (result) => (output.textContent = JSON.stringify(result, null, 2)),
+    );
+  }
+
+  const form = document.getElementById("form");
+  form.addEventListener("submit", onRunTests);
+</script>
