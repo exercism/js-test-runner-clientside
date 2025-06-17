@@ -1,3 +1,4 @@
+import { SubmissionError } from "./errors";
 import type { OutputOptions, TranspileFn } from "./types";
 
 type Writeable<T> = { -readonly [P in keyof T]: T[P] };
@@ -7,7 +8,7 @@ export function readConfig<Custom extends OutputOptions = OutputOptions>(
 ): ExerciseConfig<Custom> {
   const configJson = solutionFiles[".meta/config.json"];
   if (!configJson) {
-    throw new Error(
+    throw new SubmissionError(
       `Expected '.meta/config.json' to exist. Actual: ${Object.keys(solutionFiles)}`,
     );
   }
@@ -93,7 +94,7 @@ export function findUserCode(
   );
 
   if (userPaths.length === 0) {
-    throw new Error(
+    throw new SubmissionError(
       `Expected at least one solution file to be submitted (${config.files.solution}). Actual: ${Object.keys(files)}`,
     );
   }
@@ -124,7 +125,7 @@ export function findLibCode(
   );
 
   if (userPaths && editorPaths.some((path) => userPaths.includes(path))) {
-    throw new Error(
+    throw new SubmissionError(
       `Expected the provided non-solution files to not have changed. The user provided files (${userPaths.join(", ")}) overlaps with the configured read-only files (${editorPaths.join(", ")}).`,
     );
   }
@@ -149,13 +150,13 @@ export function findTestCode(
   );
 
   if (userPaths && testPaths.some((path) => userPaths.includes(path))) {
-    throw new Error(
+    throw new SubmissionError(
       `Expected the provided non-solution files to not have changed. The user provided files (${userPaths.join(", ")}) overlaps with the configured test files (${testPaths.join(", ")}).`,
     );
   }
 
   if (testPaths.length === 0) {
-    throw new Error(
+    throw new SubmissionError(
       `Expected at least one test file to be included (${config.files.test}). Actual: ${Object.keys(files)}`,
     );
   }

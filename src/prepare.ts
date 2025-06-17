@@ -1,3 +1,4 @@
+import { SubmissionError, UnsupportedError } from "./errors";
 import { importNameWithoutExtension, SolutionCode } from "./utils";
 
 /**
@@ -19,7 +20,7 @@ const esm = ({ raw }: TemplateStringsArray, ...vals: string[]) =>
 export type PrepareOptions = { enableTaskIds: boolean };
 export type PreparedCode = {
   readonly entry: string;
-  readonly urls: readonly string[];
+  readonly urls: Readonly<Record<string, string>>;
 };
 
 /**
@@ -35,7 +36,7 @@ export function prepare(
   options: PrepareOptions = { enableTaskIds: false },
 ): PreparedCode {
   const globalLogger = esm`${LOGGER}`;
-  const urls: string[] = [globalLogger];
+  const urls: Record<string, string> = { "logger.js": globalLogger };
 
   // Conditionally enable mocking
   const hasMocks = Object.values(code.test).some((testContent) =>
@@ -44,7 +45,7 @@ export function prepare(
 
   if (hasMocks) {
     // const mocker = esm`${MOCKER}`;
-    // urls.push(mocker);
+    // urls['mocker.js'] = mocker;
 
     const mockedModules: string[] = [];
     const matcher = /jest\.mock\(["'](?:\.\/)(.*)["'],/g;
@@ -111,7 +112,7 @@ ${user[filePath]}
   `;
 
     if (userCode.includes("module.exports = ")) {
-      throw new Error(
+      throw new SubmissionError(
         "You must use ESM export syntax. Remove all references to module.exports and exports.<...> from the code (including comments) to continue.",
       );
     }
@@ -121,7 +122,14 @@ ${user[filePath]}
 
   // Run tests for test code
   for (const filePath in test) {
-    const lines = test[filePath].split("\n");
+    if (
+      !test[filePath].includes("describe(") &&
+      Object.keys(test).length === 1
+    ) {
+      test[filePath] = "finishSuite()";
+    }
+
+    const lines = test[filePath].trim().split("\n");
 
     // Delete globals import
     const globalsImportLineIndex = lines.findIndex(
@@ -159,7 +167,7 @@ ${user[filePath]}
     const code = user[filePath] ?? test[filePath] ?? shared[filePath];
     const importedCode = esm`${code}`;
 
-    urls.push(importedCode);
+    urls[filePath] = importedCode;
     if (filePath in test) {
       entry = importedCode;
     }
@@ -169,11 +177,11 @@ ${user[filePath]}
 
   if (Object.keys(test).length > 1) {
     entry = makeCombinedTest(test);
-    urls.push(entry);
+    urls["combined.spec.js"] = entry;
   }
 
   if (entry === "") {
-    throw new Error(
+    throw new SubmissionError(
       `Expected entrypoint to be a test (one of: ${Object.keys(test)}), actual: (none)`,
     );
   }
@@ -274,7 +282,7 @@ function replaceImports(
 
 function makeCombinedTest(test: Record<string, string>) {
   if (Object.keys(test).length > 1) {
-    throw new Error(
+    throw new UnsupportedError(
       "Combining test files into a single test file is currently unsupported",
     );
   }
@@ -499,13 +507,15 @@ async function queueTest(name, c, taskId) {
   console.debug(\`[end] \${name}\`)
 }
 
-jest.mock = function mock(_moduleName, mocker) {
-  const mocked = mocker();
+if (typeof jest !== 'undefined') {
+  jest.mock = function mock(_moduleName, mocker) {
+    const mocked = mocker();
 
-  Object.entries(mocked).forEach(([key, value]) => {
-    globalThis[key] = value
-    console.debug(\`[mocked] \${key} from \${_moduleName}\`)
-  })
+    Object.entries(mocked).forEach(([key, value]) => {
+      globalThis[key] = value
+      console.debug(\`[mocked] \${key} from \${_moduleName}\`)
+    })
+  }
 }
 
 export { run }

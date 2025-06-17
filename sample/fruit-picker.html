@@ -257,8 +257,16 @@ type FruitPickerErrorCallback = () => ErrorResult;</textarea
 <script type="module">
   import { runTests } from "./imported.mjs";
 
+  let abortController;
+
   function onRunTests(event) {
     event.preventDefault();
+
+    if (abortController) {
+      abortController.abort("Another run was requested");
+    }
+
+    abortController = new AbortController();
 
     const form = event.currentTarget;
     const slug = form.querySelector('input[name="slug"]').value;
@@ -276,7 +284,7 @@ type FruitPickerErrorCallback = () => ErrorResult;</textarea
     const output = document.getElementById("output");
     output.textContent = null;
 
-    runTests(slug, files, ["fruit-picker.js"]).then(
+    runTests(slug, files, ["fruit-picker.js"], abortController.signal).then(
       (result) => (output.textContent = JSON.stringify(result, null, 2)),
     );
   }

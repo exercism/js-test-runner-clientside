@@ -19,7 +19,9 @@
 
 <form id="form">
   <label for="usercode">User code</label>
-  <textarea name="files[service.js]" id="usercode">
+  <textarea
+    name="files[service.js]"
+    id="usercode">
 /** @format */
 
 /// <reference path="./global.d.ts" />
@@ -139,7 +141,9 @@ export class BatchIsEmpty extends Error {
   >
 
   <label for="testcode">Test code</label>
-  <textarea name="files[service.spec.js]" id="testcode">
+  <textarea
+    name="files[service.spec.js]"
+    id="testcode">
 import { beforeEach, describe, expect, test } from '@jest/globals';
 import {
   BatchIsEmpty,
@@ -350,7 +354,9 @@ describe('Premium service', () => {
   >
 
   <label for="config">Config</label>
-  <textarea name="files[.meta/config.json]" id="config">
+  <textarea
+    name="files[.meta/config.json]"
+    id="config">
 {
   "authors": [
     "SleeplessByte"
@@ -387,9 +393,15 @@ describe('Premium service', () => {
   >
 
   <label for="slug">Slug</label>
-  <input type="string" value="lasagna" name="slug" id="slug" />
+  <input
+    type="string"
+    value="lasagna"
+    name="slug"
+    id="slug" />
 
-  <textarea hidden name="files[api.js]">
+  <textarea
+    hidden
+    name="files[api.js]">
 import {
   AbusiveClientError,
   NotAvailable,
@@ -520,7 +532,9 @@ class BadRequest extends Error {
 }</textarea
   >
 
-  <textarea hidden name="files[errors.js]">
+  <textarea
+    hidden
+    name="files[errors.js]">
 export class NotAvailable extends Error {
   constructor(text) {
     super(
@@ -556,7 +570,9 @@ export class ConnectionError extends Error {
 }</textarea
   >
 
-  <textarea hidden name="files[global.d.ts]">
+  <textarea
+    hidden
+    name="files[global.d.ts]">
 /**
  * These are the shapes of the external service', the return values and the
  * functions. Don't change these. In various IDEs, such as vscode, this will add
@@ -588,8 +604,16 @@ type requestTranslation = (
 <script type="module">
   import { runTests } from "./imported.mjs";
 
+  let abortController;
+
   function onRunTests(event) {
     event.preventDefault();
+
+    if (abortController) {
+      abortController.abort("Another run was requested");
+    }
+
+    abortController = new AbortController();
 
     const form = event.currentTarget;
     const slug = form.querySelector('input[name="slug"]').value;
@@ -607,7 +631,7 @@ type requestTranslation = (
     const output = document.getElementById("output");
     output.textContent = null;
 
-    runTests(slug, files, ["service.js"]).then(
+    runTests(slug, files, ["service.js"], abortController.signal).then(
       (result) => (output.textContent = JSON.stringify(result, null, 2)),
     );
   }

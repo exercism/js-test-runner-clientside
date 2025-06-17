@@ -1,3 +1,8 @@
+import {
+  AbortedRunError,
+  BrowserTestRunnerError,
+  TimeoutError,
+} from "./errors";
 import { generateOutput as generateJavaScriptOutput } from "./output";
 import { prepare } from "./prepare";
 import type {
@@ -112,7 +117,7 @@ async function runJestTests(
 
   function cleanup() {
     console.debug("[suite] cleaning up run", urls);
-    urls.forEach((objectUrl) => URL.revokeObjectURL(objectUrl));
+    Object.values(urls).forEach((objectUrl) => URL.revokeObjectURL(objectUrl));
 
     clearInterval(references.interval);
     clearTimeout(references.timer);
@@ -125,7 +130,7 @@ async function runJestTests(
   // Bail early if dead-on-arrival
   if (signal) {
     if (signal.aborted) {
-      throw new Error("Run was aborted before it could start");
+      throw new AbortedRunError("Run was aborted before it could start");
     }
   }
 
@@ -144,10 +149,20 @@ async function runJestTests(
 
       return Promise.race([run, abort]);
     })
-    .catch<FailedTestRun>((error) => {
+    .catch<FailedTestRun>((error: unknown) => {
       console.error("[suite] failed to run the tests \n", error);
 
-      return { ...({ message: error.message } as FailedTestRun) };
+      if (error && typeof error === "object" && "message" in error) {
+        let message = String(error.message);
+
+        for (const [originalPath, module] of Object.entries(urls)) {
+          message = message.replaceAll(module, originalPath);
+        }
+
+        return { ...({ message } as FailedTestRun) };
+      }
+
+      throw new BrowserTestRunnerError(`Something went wrong: ${error}`);
     });
 
   cleanup();
@@ -180,7 +195,9 @@ function onCompletedRun(
     references.timer = setTimeout(() => {
       clearInterval(references.interval);
 
-      reject(new Error("Did not finish the tests within reasonable time"));
+      reject(
+        new TimeoutError("Did not finish the tests within reasonable time"),
+      );
     }, timeout);
 
     references.interval = setInterval(() => {
@@ -207,15 +224,37 @@ function onAbortRun(signal: undefined | AbortSignal) {
     }
 
     if (signal.aborted) {
-      return reject(signal.reason || "Run was aborted before it could finish");
+      return reject(
+        abortError(signal.reason, "Run was aborted before it could finish"),
+      );
     }
 
     signal.addEventListener(
       "abort",
-      (_) => reject(signal.reason || "Run was aborted before it could finish"),
+      (_) =>
+        reject(
+          abortError(signal.reason, "Run was aborted before it could finish"),
+        ),
       {
         once: true,
       },
     );
   });
+}
+
+function abortError(reason: unknown, message: string) {
+  if (typeof reason === "object" && reason !== null) {
+    if (reason.constructor.name === "DOMException") {
+      return new AbortedRunError(message);
+    }
+
+    if (
+      reason.constructor.name.includes("Error") ||
+      reason.constructor.name.includes("Exception")
+    ) {
+      return reason;
+    }
+  }
+
+  return new AbortedRunError(`${message}: ${reason}`);
 }
