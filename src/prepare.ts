@@ -339,6 +339,7 @@ export function register(name, value) {
 const TEST_HELPER = `
 const run = {
   taskId: 0,
+  testTaskId: 0,
   failed: 0,
   skipped: 0,
   passed: 0,
@@ -351,9 +352,8 @@ const run = {
 }
 
 function log(logMessage) {
-  // TODO track task id when logging, somehow
-  run.logs[0] ||= []
-  run.logs[0].push(logMessage)
+  run.logs[run.testTaskId] ||= []
+  run.logs[run.testTaskId].push(logMessage)
 }
 
 const removeLogListener = addLogListener(log)
@@ -481,7 +481,9 @@ function promise(p) {
 }
 
 async function queueTest(name, c, taskId) {
-  console.debug(\`[start] \${name}\`)
+  console.debug(\`[start] \${name} (task \${taskId})\`)
+  run.testTaskId = taskId
+
   for (const fn of beforeEachFns) {
     await fn()
   }
@@ -504,7 +506,7 @@ async function queueTest(name, c, taskId) {
     await fn()
   }
 
-  console.debug(\`[end] \${name}\`)
+  console.debug(\`[end] \${name} (task \${taskId})\`)
 }
 
 if (typeof jest !== 'undefined') {
