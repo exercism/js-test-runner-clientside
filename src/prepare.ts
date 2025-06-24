@@ -1,4 +1,8 @@
-import { SubmissionError, UnsupportedError } from "./errors";
+import {
+  BrowserTestRunnerError,
+  SubmissionError,
+  UnsupportedError,
+} from "./errors";
 import { esm, importNameWithoutExtension, SolutionCode } from "./utils";
 
 export type PrepareOptions = { enableTaskIds: boolean };
@@ -206,6 +210,13 @@ function makeDependencyGraph(code: {
 
       for (const [referencePath, matcher] of Object.entries(matchers)) {
         if (matcher.test(content)) {
+          // Break on cyclic references
+          if (filePath === referencePath) {
+            throw new SubmissionError(
+              `Self-references are not allowed ${filePath} -> ${referencePath}`,
+            );
+          }
+
           references[filePath].push(referencePath);
           referenced_bys[referencePath].push(filePath);
         }
@@ -220,6 +231,13 @@ function makeDependencyGraph(code: {
     const safeToAdd = Object.entries(references)
       .filter(([, fileRefs]) => fileRefs.length === 0)
       .map(([filePath]) => filePath);
+
+    // Break on cyclic references
+    if (safeToAdd.length === 0) {
+      throw new SubmissionError(
+        `Cyclic references are not allowed: ${JSON.stringify(references)}`,
+      );
+    }
 
     for (const filePath of safeToAdd) {
       dependencyOrder.push(filePath);

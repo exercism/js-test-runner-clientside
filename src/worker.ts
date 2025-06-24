@@ -8,9 +8,7 @@ globals["jest"] = jest;
 
 onmessage = function (event) {
   const { entry, timeout } = event.data;
-  console.debug(
-    `[test-worker] running ${entry} for a maximum of ${timeout / 100}s`,
-  );
+  console.debug(`[test-worker] running ${entry} for a maximum of ${timeout}s`);
 
   let timer: undefined | NodeJS.Timeout;
   let interval: undefined | NodeJS.Timeout;
@@ -31,7 +29,7 @@ onmessage = function (event) {
         clearInterval(references.interval);
 
         throw new Error("Did not finish the tests within reasonable time");
-      }, timeout);
+      }, timeout * 1000);
 
       references.interval = setInterval(() => {
         if (run.completed) {
@@ -41,7 +39,7 @@ onmessage = function (event) {
           console.debug("[test-worker] completed all tests");
           postMessage(JSON.parse(JSON.stringify(run)));
         }
-      }, 100);
+      }, 16);
     },
     (error) => {
       debugger;

@@ -136,7 +136,7 @@ async function runJestTests(
   }
 
   const result = await workerize(
-    makeWorkerRunner(entry, signal),
+    makeWorkerRunner(entry, signal, references),
     makeMainThreadRunner(entry, signal, references),
   ).catch<FailedTestRun>((error: unknown) => {
     console.error("[suite] failed to run the tests \n", error);
@@ -163,7 +163,14 @@ async function runJestTests(
   return generateOutput(result, config.custom);
 }
 
-function makeWorkerRunner(entry: string, signal?: AbortSignal) {
+function makeWorkerRunner(
+  entry: string,
+  signal: AbortSignal | undefined,
+  references: {
+    timer: undefined | NodeJS.Timeout;
+    interval: undefined | NodeJS.Timeout;
+  },
+) {
   return async function onWorker(
     worker: Worker,
   ): Promise<FailedTestRun | TestRun> {
@@ -181,17 +188,28 @@ function makeWorkerRunner(entry: string, signal?: AbortSignal) {
         "error",
         (message) => {
           console.error("[main] worker failed to complete run", message);
-          reject(message.error);
+          reject(
+            message.error ||
+              new BrowserTestRunnerError("Worked failed without error message"),
+          );
         },
         { once: true },
       );
 
       // Start the tests
-      worker.postMessage({ entry, timeout: 100 * 10 * 30 });
+      worker.postMessage({ entry, timeout: 30 });
     });
-    const abort = onAbortRun(signal);
 
-    return Promise.race([run, abort]).finally(() => {
+    const abort = onAbortRun(signal);
+    const timeout = new Promise<never>((_, reject) => {
+      references.timer = setTimeout(() => {
+        reject(
+          new TimeoutError("Did not finish the tests within reasonable time"),
+        );
+      }, 30 * 1000);
+    });
+
+    return Promise.race([run, abort, timeout]).finally(() => {
       worker.terminate();
     });
   };
@@ -215,7 +233,7 @@ function makeMainThreadRunner(
         return run;
       }
 
-      const runPromise = onCompletedRun(run, 100 * 10 * 30, references);
+      const runPromise = onCompletedRun(run, 30, references);
       const abortPromise = onAbortRun(signal);
 
       return Promise.race([runPromise, abortPromise]);
@@ -227,7 +245,7 @@ function makeMainThreadRunner(
  * Promise that resolves when the run completes or a timeout is reached
  *
  * @param run the live object with the run. This is usually an exported binding
- * @param timeout the number of milliseconds these tests are allowed to run
+ * @param timeout the number of seconds these tests are allowed to run
  * @param references object to track interval and timeout so they can be cleared
  *
  * @returns promise that resolves on completion or rejects on timeout
@@ -247,7 +265,7 @@ function onCompletedRun(
       reject(
         new TimeoutError("Did not finish the tests within reasonable time"),
       );
-    }, timeout);
+    }, timeout * 1000);
 
     references.interval = setInterval(() => {
       if (run.completed) {

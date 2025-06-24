@@ -1,6 +1,7 @@
+import { UnsupportedError } from "./errors";
 import type { FailedTestRun, TestRun } from "./types";
 
-export function workerize(
+export async function workerize(
   onWorker: (worker: Worker) => Promise<TestRun | FailedTestRun>,
   onInline: () => Promise<TestRun | FailedTestRun>,
 ): Promise<TestRun | FailedTestRun> {
@@ -8,7 +9,7 @@ export function workerize(
     let worker: Worker;
 
     try {
-      worker = makeWorker();
+      worker = await makeWorker();
     } catch (error) {
       console.warn("[worker] could not be made", error);
 
@@ -23,17 +24,30 @@ export function workerize(
   return onInline();
 }
 
-function makeWorker() {
+const __pathsExists: Record<string, undefined | boolean> = {};
+
+async function makeWorker() {
   const workerPath =
     (((globalThis as any).__exercism || {})["workers"] || {})["javascript"] ||
     "./javascript-browser-test-runner-worker.mjs";
 
-  return new Worker(workerPath, {
-    type: "module",
-  });
+  if (__pathsExists[workerPath] === true) {
+    return new Worker(workerPath, {
+      type: "module",
+    });
+  }
+
+  if (__pathsExists[workerPath] === undefined) {
+    __pathsExists[workerPath] = false;
+    await import(workerPath);
+    __pathsExists[workerPath] = true;
+    return makeWorker();
+  }
+
+  throw new UnsupportedError(`${workerPath} did not yield a valid worker`);
 }
 
-let __supportsModuleWorkers = { result: undefined as undefined | boolean };
+const __supportsModuleWorkers = { result: undefined as undefined | boolean };
 
 function supportsWorkerType() {
   if (__supportsModuleWorkers.result !== undefined) {
