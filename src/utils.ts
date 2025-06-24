@@ -201,3 +201,19 @@ export function importNameWithoutExtension(path: string, sep = "/"): string {
 
   return importName;
 }
+
+/**
+ * Turns code into an ES Module (blob) so it can be references on the web
+ * without requiring to exist on disk / url.
+ *
+ * Do not forget to clean up the blob after it's no longer necessary.
+ *
+ * @param code
+ * @returns blob://<....>
+ */
+export const esm = ({ raw }: TemplateStringsArray, ...vals: string[]) =>
+  URL.createObjectURL(
+    new Blob([String.raw({ raw } as any, ...vals)], {
+      type: "text/javascript",
+    }),
+  );

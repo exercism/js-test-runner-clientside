@@ -1,21 +1,9 @@
-import { SubmissionError, UnsupportedError } from "./errors";
-import { importNameWithoutExtension, SolutionCode } from "./utils";
-
-/**
- * Turns code into an ES Module (blob) so it can be references on the web
- * without requiring to exist on disk / url.
- *
- * Do not forget to clean up the blob after it's no longer necessary.
- *
- * @param code
- * @returns blob://<....>
- */
-const esm = ({ raw }: TemplateStringsArray, ...vals: string[]) =>
-  URL.createObjectURL(
-    new Blob([String.raw({ raw } as any, ...vals)], {
-      type: "text/javascript",
-    }),
-  );
+import {
+  BrowserTestRunnerError,
+  SubmissionError,
+  UnsupportedError,
+} from "./errors";
+import { esm, importNameWithoutExtension, SolutionCode } from "./utils";
 
 export type PrepareOptions = { enableTaskIds: boolean };
 export type PreparedCode = {
@@ -222,6 +210,13 @@ function makeDependencyGraph(code: {
 
       for (const [referencePath, matcher] of Object.entries(matchers)) {
         if (matcher.test(content)) {
+          // Break on cyclic references
+          if (filePath === referencePath) {
+            throw new SubmissionError(
+              `Self-references are not allowed ${filePath} -> ${referencePath}`,
+            );
+          }
+
           references[filePath].push(referencePath);
           referenced_bys[referencePath].push(filePath);
         }
@@ -236,6 +231,13 @@ function makeDependencyGraph(code: {
     const safeToAdd = Object.entries(references)
       .filter(([, fileRefs]) => fileRefs.length === 0)
       .map(([filePath]) => filePath);
+
+    // Break on cyclic references
+    if (safeToAdd.length === 0) {
+      throw new SubmissionError(
+        `Cyclic references are not allowed: ${JSON.stringify(references)}`,
+      );
+    }
 
     for (const filePath of safeToAdd) {
       dependencyOrder.push(filePath);
@@ -383,7 +385,7 @@ function failTest(taskId, name, err) {
   run.messages[taskId] ||= []
   run.messages[taskId].push({ test: name, status: 'failed', details: err.message, err: err })
 
-	window.lastErr = err
+	globalThis.lastErr = err
 
   if (err.constructor.name === 'JestAssertionError') {
     console.error(\`[test] failed assertion of \${name}.\\n\`, err.message)

@@ -1,4 +1,4 @@
-window.process = window.process || {
+globalThis.process = globalThis.process || {
   env: {
     NODE_ENV: process.env.NODE_ENV,
   },
