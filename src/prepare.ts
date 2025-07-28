@@ -117,23 +117,18 @@ ${user[filePath]}
       test[filePath] = "finishSuite()";
     }
 
-    const lines = test[filePath].trim().split("\n");
-
     // Delete globals import
-    const globalsImportLineIndex = lines.findIndex(
-      (l) =>
-        l.indexOf("import ") !== -1 && l.indexOf("from '@jest/globals'") !== -1,
-    );
-    if (globalsImportLineIndex !== -1) {
-      lines.splice(
-        globalsImportLineIndex,
-        1,
-        "// import { ... } from '@jest/globals'",
-      );
-    }
-
+    const lines = test[filePath]
+      .trim()
+      .replace(
+        /import.*from\s+['"]@jest\/globals['"];?/s,
+        (importText) => `/* ${importText} */`,
+      )
+      .split("\n");
+    
+    
     // Add test helper below main `import { ... } from './solution`
-    let injectIndex = lines.findIndex((l) => l.indexOf("from ") !== -1) + 1;
+    let injectIndex = lines.findIndex((l) => l.lastIndexOf("from ") !== -1) + 1;
     if (injectIndex === -1) {
       lines.unshift(...TEST_HELPER);
     } else {
