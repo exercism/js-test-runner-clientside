@@ -125,8 +125,7 @@ ${user[filePath]}
         (importText) => `/* ${importText} */`,
       )
       .split("\n");
-    
-    
+  
     // Add test helper below main `import { ... } from './solution`
     let injectIndex = lines.findIndex((l) => l.lastIndexOf("from ") !== -1) + 1;
     if (injectIndex === -1) {
