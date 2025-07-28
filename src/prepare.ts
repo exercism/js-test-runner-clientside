@@ -121,7 +121,7 @@ ${user[filePath]}
     const lines = test[filePath]
       .trim()
       .replace(
-        /import.*from\s+['"]@jest\/globals['"];?/s,
+        /import\s+.*?\s+from\s+['"]@jest\/globals['"];?/s,
         (importText) => `/* ${importText} */`,
       )
       .split("\n");
