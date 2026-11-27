@@ -1,0 +1,6 @@
+{
+  "status": "error",
+  "message": "SyntaxError: <solution>/two-fer.spec.js: Unexpected token (2:0)\n\n      1 | describe('twoFer()', t('another name given', () => {\n    > 2 |\n        | ^\n",
+  "tests": [],
+  "version": 3
+}

@@ -1,0 +1,31 @@
+{
+  "status": "pass",
+  "message": "",
+  "tests": [
+    {
+      "name": "no name given",
+      "status": "pass",
+      "message": "",
+      "output": "\"name: you\"\n\"name: Alice\"\n\"name: Bob\"",
+      "test_code": "",
+      "task_id": 1
+    },
+    {
+      "name": "a name given",
+      "status": "pass",
+      "message": "",
+      "output": "\"name: you\"\n\"name: Alice\"\n\"name: Bob\"",
+      "test_code": "",
+      "task_id": 1
+    },
+    {
+      "name": "another name given",
+      "status": "pass",
+      "message": "",
+      "output": "\"name: you\"\n\"name: Alice\"\n\"name: Bob\"",
+      "test_code": "",
+      "task_id": 1
+    }
+  ],
+  "version": 3
+}

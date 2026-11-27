@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>js-test-runner-clientside tests</title>
+  </head>
+  <body>
+    <script type="module">
+      // The test harness opens this page with ?mode=worker or ?mode=main-thread.
+      const mode = new URLSearchParams(location.search).get("mode");
+
+      // Count the workers made for a test run, so the harness can check which
+      // mode actually ran. The runner also makes a worker with a "data:" URL to
+      // check for module worker support, and that one is left out.
+      window.__workersStarted = 0;
+
+      if (mode === "main-thread") {
+        // Without window.Worker, the runner runs the tests on the main thread.
+        delete window.Worker;
+      } else {
+        const OriginalWorker = window.Worker;
+        window.Worker = class extends OriginalWorker {
+          constructor(url, options) {
+            super(url, options);
+            if (!String(url).startsWith("data:")) {
+              window.__workersStarted += 1;
+            }
+          }
+        };
+      }
+
+      const { runTests } = await import("/imported.mjs");
+
+      window.runFixture = (slug, files, userPaths) =>
+        runTests(slug, files, userPaths);
+      window.ready = true;
+    </script>
+  </body>
+</html>
