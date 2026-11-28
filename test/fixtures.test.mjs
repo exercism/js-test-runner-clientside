@@ -200,17 +200,22 @@ async function runFixture(fixture, mode) {
 }
 
 /**
- * The comparison covers the overall status, and each test's name, status and
- * output.
+ * The comparison covers the overall status, and each test's name, status,
+ * output and code. The server runner gives null as the code of a test named
+ * with a template literal, and this runner gives the code. So the comparison
+ * leaves out the code where the server runner gives null.
  */
-function summarise(result) {
+function summarise(result, serverResult = result) {
   return {
     status: result.status,
-    tests: (result.tests ?? []).map(({ name, status, output }) => ({
-      name,
-      status,
-      output,
-    })),
+    tests: (result.tests ?? []).map(
+      ({ name, status, output, test_code }, i) => {
+        const serverCode = serverResult.tests?.[i]?.test_code;
+        return serverCode === null
+          ? { name, status, output }
+          : { name, status, output, test_code };
+      },
+    ),
   };
 }
 
@@ -223,7 +228,7 @@ function assertAgreesWithServer(fixture, actual) {
   }
 
   const expected = JSON.parse(readFileSync(serverResultsPath, "utf8"));
-  assert.deepEqual(summarise(actual), summarise(expected));
+  assert.deepEqual(summarise(actual, expected), summarise(expected));
 
   if (expected.status === "error") {
     assert.notEqual(

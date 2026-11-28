@@ -7,14 +7,14 @@
       "status": "pass",
       "message": "",
       "output": "[log] undefined",
-      "test_code": ""
+      "test_code": "expect(twoFer()).toEqual('One for you, one for me.');"
     },
     {
       "name": "twoFer() > a name given",
       "status": "fail",
-      "message": "Expected: \"One for Alice, one for me.\"\nReceived: \"One for you, one for me.\"",
+      "message": "expect(received).toEqual(expected) // deep equality\n\nExpected: \"One for Alice, one for me.\"\nReceived: \"One for you, one for me.\"",
       "output": "[log] Some global log\n[log] Alice",
-      "test_code": "expect(received).toEqual(expected) // deep equality"
+      "test_code": "const name = 'Alice';\nexpect(twoFer(name)).toEqual('One for Alice, one for me.');"
     }
   ],
   "version": 3

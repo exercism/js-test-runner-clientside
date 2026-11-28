@@ -37,6 +37,8 @@ export interface TestMessage {
   err?: Error;
   /** Logs written while the test ran, such as "[log] name: Alice" */
   logs?: string[];
+  /** The source of the test function */
+  code?: string;
 }
 
 export interface OutputInterface {
@@ -51,7 +53,7 @@ export interface OutputTestInterface {
   status: "fail" | "pass" | "error";
   message: string;
   output: string | null;
-  test_code: string;
+  test_code: string | null;
   task_id?: number;
 }
 

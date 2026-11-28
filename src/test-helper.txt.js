@@ -80,15 +80,15 @@ function startTest(taskId, name) {
   run.messages[taskId] ||= [];
 }
 
-function passTest(taskId, name, logs = []) {
+function passTest(taskId, name, logs = [], code) {
   run.passed += 1;
   originalConsole.debug(`[test (${taskId})]:pass ${name}`);
 
   run.messages[taskId] ||= [];
-  run.messages[taskId].push({ test: name, status: "passed", logs });
+  run.messages[taskId].push({ test: name, status: "passed", logs, code });
 }
 
-function failTest(taskId, name, err, logs = []) {
+function failTest(taskId, name, err, logs = [], code) {
   run.failed += 1;
   originalConsole.debug(`[test (${taskId})]:fail ${name}`);
 
@@ -99,6 +99,7 @@ function failTest(taskId, name, err, logs = []) {
     details: err && err.message,
     err: err,
     logs,
+    code,
   });
 
   globalThis.lastErr = err;
@@ -309,10 +310,13 @@ async function queueTest(name, c, suite) {
     }
   }
 
+  // The source of the test function, from which the output takes its code.
+  const code = typeof c === "function" ? c.toString() : undefined;
+
   if (failed) {
-    failTest(taskId, testName, error, logs);
+    failTest(taskId, testName, error, logs, code);
   } else {
-    passTest(taskId, testName, logs);
+    passTest(taskId, testName, logs, code);
   }
 
   originalConsole.debug(`[end] ${testName} (task ${taskId})`);

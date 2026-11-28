@@ -7,7 +7,7 @@
       "status": "pass",
       "message": "",
       "output": "[log] name: you",
-      "test_code": "",
+      "test_code": "expect(twoFer()).toEqual('One for you, one for me.');",
       "task_id": 1
     },
     {
@@ -15,7 +15,7 @@
       "status": "pass",
       "message": "",
       "output": "[log] name: Alice",
-      "test_code": "",
+      "test_code": "const name = 'Alice';\nexpect(twoFer(name)).toEqual('One for Alice, one for me.');",
       "task_id": 1
     },
     {
@@ -23,7 +23,7 @@
       "status": "pass",
       "message": "",
       "output": "[log] name: Bob",
-      "test_code": "",
+      "test_code": "const name = 'Bob';\nexpect(twoFer(name)).toEqual('One for Bob, one for me.');",
       "task_id": 1
     }
   ],
