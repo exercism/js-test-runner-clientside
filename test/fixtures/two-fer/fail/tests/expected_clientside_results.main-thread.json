@@ -3,14 +3,14 @@
   "message": "",
   "tests": [
     {
-      "name": "no name given",
+      "name": "twoFer() > no name given",
       "status": "pass",
       "message": "",
       "output": "\"Alice\"",
       "test_code": ""
     },
     {
-      "name": "a name given",
+      "name": "twoFer() > a name given",
       "status": "fail",
       "message": "Expected: \"One for Alice, one for me.\"\nReceived: \"One for you, one for me.\"",
       "output": "\"Alice\"",

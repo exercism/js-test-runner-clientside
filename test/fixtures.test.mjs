@@ -48,9 +48,6 @@ const TIMEOUT_MESSAGE = "Did not finish the tests within reasonable time";
 // Fixtures where the result differs in spirit from the server runner, with the
 // reason. Each one runs as a TODO, so the difference stays in the test report.
 const SERVER_DIFFERENCES = {
-  "forth/oxe-b": {
-    all: "beforeEach in an outer describe does not run for tests in a nested describe",
-  },
   "pythagorean-triplet/exemplar": {
     all: "a test.skip fails the run, because the config has no flag.tests.includes-optional",
   },
@@ -205,18 +202,10 @@ async function runFixture(fixture, mode) {
   }
 }
 
-/**
- * This runner names a test without its describe blocks ("no name given"),
- * while the server runner includes them ("twoFer() > no name given"). The
- * comparison uses the last part of the name.
- */
 function summarise(result) {
   return {
     status: result.status,
-    tests: (result.tests ?? []).map(({ name, status }) => ({
-      name: name.split(" > ").at(-1),
-      status,
-    })),
+    tests: (result.tests ?? []).map(({ name, status }) => ({ name, status })),
   };
 }
 

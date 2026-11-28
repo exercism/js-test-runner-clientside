@@ -1,11 +1,389 @@
 {
-  "status": "fail",
+  "status": "pass",
   "message": "",
   "tests": [
     {
-      "name": "numbers just get pushed onto the stack",
-      "status": "fail",
-      "message": "Cannot read properties of undefined (reading 'evaluate')",
+      "name": "Forth > parsing and numbers > numbers just get pushed onto the stack",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > parsing and numbers > pushes negative numbers onto the stack",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > addition > can add two numbers",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > addition > errors if there is nothing on the stack",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > addition > errors if there is only one value on the stack",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > addition > more than two values on the stack",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > subtraction > can subtract two numbers",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > subtraction > errors if there is nothing on the stack",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > subtraction > errors if there is only one value on the stack",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > subtraction > more than two values on the stack",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > multiplication > can multiply two numbers",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > multiplication > errors if there is nothing on the stack",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > multiplication > errors if there is only one value on the stack",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > multiplication > more than two values on the stack",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > division > can divide two numbers",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > division > performs integer division",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > division > errors if dividing by zero",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > division > errors if there is nothing on the stack",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > division > errors if there is only one value on the stack",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > division > more than two values on the stack",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > combined arithmetic > addition and subtraction",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > combined arithmetic > multiplication and division",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > combined arithmetic > multiplication and addition",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > combined arithmetic > addition and multiplication",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > dup > copies a value on the stack",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > dup > copies the top value on the stack",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > dup > errors if there is nothing on the stack",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > drop > removes the top value on the stack if it is the only one",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > drop > removes the top value on the stack if it is not the only one",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > drop > errors if there is nothing on the stack",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > swap > swaps the top two values on the stack if they are the only ones",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > swap > swaps the top two values on the stack if they are not the only ones",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > swap > errors if there is nothing on the stack",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > swap > errors if there is only one value on the stack",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > over > copies the second element if there are only two",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > over > copies the second element if there are more than two",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > over > errors if there is nothing on the stack",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > over > errors if there is only one value on the stack",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > user-defined words > can consist of built-in words",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > user-defined words > execute in the right order",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > user-defined words > can override other user-defined words",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > user-defined words > can override built-in words",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > user-defined words > can override built-in operators",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > user-defined words > can use different words with the same name",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > user-defined words > can define word that uses word with the same name",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > user-defined words > cannot redefine non-negative numbers",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > user-defined words > cannot redefine negative numbers",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > user-defined words > errors if executing a non-existent word",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > user-defined words > only defines locally",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > case-insensitivity > DUP is case-insensitive",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > case-insensitivity > DROP is case-insensitive",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > case-insensitivity > SWAP is case-insensitive",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > case-insensitivity > OVER is case-insensitive",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > case-insensitivity > user-defined words are case-insensitive",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "Forth > case-insensitivity > definitions are case-insensitive",
+      "status": "pass",
+      "message": "",
       "output": "",
       "test_code": ""
     }

@@ -3,70 +3,70 @@
   "message": "",
   "tests": [
     {
-      "name": "it outputs a character per line",
+      "name": "strings > front door > it outputs a character per line",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "it outputs takes the first characters",
+      "name": "strings > front door > it outputs takes the first characters",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "it generates the correct password",
+      "name": "strings > front door > it generates the correct password",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "frontDoorPassword(SUMMER)",
+      "name": "strings > front door > frontDoorPassword(SUMMER)",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "frontDoorPassword(SOPHIA)",
+      "name": "strings > front door > frontDoorPassword(SOPHIA)",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "frontDoorPassword(CODE)",
+      "name": "strings > front door > frontDoorPassword(CODE)",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "it outputs a character per line",
+      "name": "strings > back door > it outputs a character per line",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "it outputs takes the first characters",
+      "name": "strings > back door > it outputs takes the first characters",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "it generates the correct password",
+      "name": "strings > back door > it generates the correct password",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "backDoorGuard(WORK)",
+      "name": "strings > back door > backDoorGuard(WORK)",
       "status": "pass",
       "message": "",
       "output": "",

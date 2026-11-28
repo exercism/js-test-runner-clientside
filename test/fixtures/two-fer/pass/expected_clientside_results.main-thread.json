@@ -3,21 +3,21 @@
   "message": "",
   "tests": [
     {
-      "name": "no name given",
+      "name": "twoFer() > no name given",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "a name given",
+      "name": "twoFer() > a name given",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "another name given",
+      "name": "twoFer() > another name given",
       "status": "pass",
       "message": "",
       "output": "",

@@ -6,12 +6,9 @@ const run = {
   passed: 0,
   messages: [],
   logs: [],
-  promises: [],
   current: Promise.resolve(),
   result: null,
   completed: null,
-  beforeEachFns: {},
-  afterEachFns: {},
 };
 
 function log(logMessage) {
@@ -24,15 +21,61 @@ const removeLogListener = addLogListener(log);
 let failFast = true;
 let awaiting = 0;
 
+/**
+ * Each describe block is a suite. The root suite holds the tests and hooks
+ * outside any describe block. A suite's taskId is the number of its top-level
+ * describe block, as the server runner counts it.
+ */
+function makeSuite(name, parent) {
+  return {
+    name,
+    parent,
+    taskId: parent ? parent.taskId : 0,
+    beforeAll: [],
+    afterAll: [],
+    beforeEach: [],
+    afterEach: [],
+    started: false,
+    beforeAllFailed: false,
+    beforeAllError: undefined,
+  };
+}
+
+const rootSuite = makeSuite(null, null);
+let currentSuite = rootSuite;
+
+/** The suites from the root suite down to this one. */
+function suitesOf(suite) {
+  const suites = [];
+  for (let s = suite; s; s = s.parent) {
+    suites.unshift(s);
+  }
+  return suites;
+}
+
+/** The name of a test, with its describe blocks: "twoFer() > no name given". */
+function fullName(suite, name) {
+  return suitesOf(suite)
+    .slice(1)
+    .map((s) => s.name)
+    .concat(name === undefined ? [] : [name])
+    .join(" > ");
+}
+
+/** Adds a step to the queue. The steps run one at a time, in order. */
+function enqueue(step) {
+  run.current = run.current.then(step).catch((err) => {
+    console.error("[test] failed to run a step \n", err);
+  });
+}
+
 function startTest(taskId, name) {
-  awaiting += 1;
   console.debug(`[test (${taskId})]:start ${name}`);
 
   run.messages[taskId] ||= [];
 }
 
 function passTest(taskId, name) {
-  awaiting -= 1;
   run.passed += 1;
   console.debug(`[test (${taskId})]:pass ${name}`);
 
@@ -41,7 +84,6 @@ function passTest(taskId, name) {
 }
 
 function failTest(taskId, name, err) {
-  awaiting -= 1;
   run.failed += 1;
   console.debug(`[test (${taskId})]:fail ${name}`);
 
@@ -49,13 +91,13 @@ function failTest(taskId, name, err) {
   run.messages[taskId].push({
     test: name,
     status: "failed",
-    details: err.message,
+    details: err && err.message,
     err: err,
   });
 
   globalThis.lastErr = err;
 
-  if (err.constructor.name === "JestAssertionError") {
+  if (err && err.constructor.name === "JestAssertionError") {
     console.error(`[test] failed assertion of ${name}.\n`, err.message);
   } else if (err instanceof SyntaxError) {
     failFast = true;
@@ -72,7 +114,6 @@ function skipTest() {
 function runSuite(name) {
   console.debug("[suite] " + name);
   awaiting += 1;
-  run.taskId += 1;
 }
 
 function finishSuite() {
@@ -87,32 +128,64 @@ function finishSuite() {
   removeLogListener();
 }
 
-async function beforeEach(fn) {
-  run.beforeEachFns[run.taskId] ||= [];
-  run.beforeEachFns[run.taskId].push(fn);
+function beforeEach(fn) {
+  currentSuite.beforeEach.push(fn);
 }
 
-async function afterEach(fn) {
-  run.afterEachFns[run.taskId] ||= [];
-  run.afterEachFns[run.taskId].push(fn);
+function afterEach(fn) {
+  currentSuite.afterEach.push(fn);
 }
 
-async function beforeAll(func) {
-  throw new Error("beforeAll is unsupported. Ask a maintainer to remove this.");
+function beforeAll(fn) {
+  currentSuite.beforeAll.push(fn);
 }
 
-async function afterAll(func) {
-  throw new Error("afterAll is unsupported. Ask a maintainer to remove this.");
+function afterAll(fn) {
+  currentSuite.afterAll.push(fn);
 }
 
-async function test(name, c) {
-  const withTaskId = run.taskId;
+/**
+ * Runs the suite's beforeAll functions before its first test, as Jest does.
+ * If one of them fails, every test in the suite fails with its error.
+ */
+async function startSuite(suite) {
+  if (!suite.started) {
+    suite.started = true;
 
-  run.current = run.current.then(() => {
-    return promise(queueTest(name, c, withTaskId));
-  });
+    try {
+      for (const fn of suite.beforeAll) {
+        await fn();
+      }
+    } catch (err) {
+      suite.beforeAllFailed = true;
+      suite.beforeAllError = err;
+    }
+  }
 
-  return run.current;
+  if (suite.beforeAllFailed) {
+    throw suite.beforeAllError;
+  }
+}
+
+/** Runs the suite's afterAll functions, if any of its tests ran. */
+async function endSuite(suite) {
+  if (!suite.started) {
+    return;
+  }
+
+  for (const fn of suite.afterAll) {
+    try {
+      await fn();
+    } catch (err) {
+      failTest(suite.taskId, fullName(suite, "afterAll"), err);
+    }
+  }
+}
+
+function test(name, c) {
+  const suite = currentSuite;
+
+  enqueue(() => queueTest(name, c, suite));
 }
 
 test.skip = skipTest;
@@ -121,27 +194,44 @@ const xtest = test;
 const it = test;
 const xit = test;
 
-async function describe(name, c) {
+function describe(name, c) {
+  const parent = currentSuite;
+  const suite = makeSuite(name, parent);
+
+  if (parent === rootSuite) {
+    run.taskId += 1;
+    suite.taskId = run.taskId;
+  }
+
   runSuite(name);
 
-  const taskId = run.taskId;
-
+  // The describe block's function adds its tests and hooks to the suite.
+  currentSuite = suite;
   try {
-    await c();
-    await Promise.all(run.promises);
+    c();
   } catch (err) {
-    run.messages[taskId] ||= [];
-    run.messages[taskId].push({
-      test: name,
+    run.messages[suite.taskId] ||= [];
+    run.messages[suite.taskId].push({
+      test: fullName(suite),
       status: "failed",
       details: err.message,
       err: err,
     });
     run.failed += 1;
+  } finally {
+    currentSuite = parent;
   }
 
-  await run.current;
-  finishSuite();
+  // This step runs after every test in the suite.
+  enqueue(async () => {
+    await endSuite(suite);
+
+    if (awaiting === 1) {
+      await endSuite(rootSuite);
+    }
+
+    finishSuite();
+  });
 }
 
 describe.skip = (name, _c) => {
@@ -152,46 +242,69 @@ describe.skip = (name, _c) => {
 
 const xdescribe = describe;
 
-function promise(p) {
-  run.promises.push(p);
-  return p;
-}
+/**
+ * Runs a test with the hooks of every describe block around it, in Jest's
+ * order: beforeAll and beforeEach from the outside in, then the test, then
+ * afterEach from the inside out.
+ */
+async function queueTest(name, c, suite) {
+  const taskId = suite.taskId;
+  const testName = fullName(suite, name);
 
-async function queueTest(name, c, taskId) {
-  console.debug(`[start] ${name} (task ${taskId})`);
+  console.debug(`[start] ${testName} (task ${taskId})`);
   run.testTaskId = taskId;
-
-  const beforeEachFns = [].concat(
-    run.beforeEachFns[0] ?? [],
-    run.beforeEachFns[run.testTaskId] ?? [],
-  );
-  const afterEachFns = [].concat(
-    run.afterEachFns[0] ?? [],
-    run.afterEachFns[run.testTaskId] ?? [],
-  );
-  for (const fn of beforeEachFns) {
-    await fn();
-  }
 
   if (failFast && run.failed > 0) {
     skipTest();
     return;
   }
 
-  startTest(taskId, name);
+  startTest(taskId, testName);
+
+  const suites = suitesOf(suite);
+  let failed = false;
+  let error;
+
+  function fail(err) {
+    if (!failed) {
+      failed = true;
+      error = err;
+    }
+  }
 
   try {
+    for (const s of suites) {
+      await startSuite(s);
+    }
+
+    for (const s of suites) {
+      for (const fn of s.beforeEach) {
+        await fn();
+      }
+    }
+
     await c();
-    passTest(taskId, name);
   } catch (err) {
-    failTest(taskId, name, err);
+    fail(err);
   }
 
-  for (const fn of afterEachFns) {
-    await fn();
+  for (const s of suites.slice().reverse()) {
+    for (const fn of s.afterEach) {
+      try {
+        await fn();
+      } catch (err) {
+        fail(err);
+      }
+    }
   }
 
-  console.debug(`[end] ${name} (task ${taskId})`);
+  if (failed) {
+    failTest(taskId, testName, error);
+  } else {
+    passTest(taskId, testName);
+  }
+
+  console.debug(`[end] ${testName} (task ${taskId})`);
 }
 
 if (typeof jest !== "undefined") {

@@ -3,7 +3,7 @@
   "message": "",
   "tests": [
     {
-      "name": "no name given",
+      "name": "twoFer() > no name given",
       "status": "pass",
       "message": "",
       "output": "\"name: you\"\n\"name: Alice\"\n\"name: Bob\"",
@@ -11,7 +11,7 @@
       "task_id": 1
     },
     {
-      "name": "a name given",
+      "name": "twoFer() > a name given",
       "status": "pass",
       "message": "",
       "output": "\"name: you\"\n\"name: Alice\"\n\"name: Bob\"",
@@ -19,7 +19,7 @@
       "task_id": 1
     },
     {
-      "name": "another name given",
+      "name": "twoFer() > another name given",
       "status": "pass",
       "message": "",
       "output": "\"name: you\"\n\"name: Alice\"\n\"name: Bob\"",

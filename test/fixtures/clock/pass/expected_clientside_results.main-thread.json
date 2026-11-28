@@ -3,364 +3,364 @@
   "message": "",
   "tests": [
     {
-      "name": "on the hour",
+      "name": "Clock > Creating a new clock with an initial time > on the hour",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "past the hour",
+      "name": "Clock > Creating a new clock with an initial time > past the hour",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "midnight is zero hours",
+      "name": "Clock > Creating a new clock with an initial time > midnight is zero hours",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "hour rolls over",
+      "name": "Clock > Creating a new clock with an initial time > hour rolls over",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "hour rolls over continuously",
+      "name": "Clock > Creating a new clock with an initial time > hour rolls over continuously",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "sixty minutes is next hour",
+      "name": "Clock > Creating a new clock with an initial time > sixty minutes is next hour",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "minutes roll over",
+      "name": "Clock > Creating a new clock with an initial time > minutes roll over",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "minutes roll over continuously",
+      "name": "Clock > Creating a new clock with an initial time > minutes roll over continuously",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "hour and minutes roll over",
+      "name": "Clock > Creating a new clock with an initial time > hour and minutes roll over",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "hour and minutes roll over continuously",
+      "name": "Clock > Creating a new clock with an initial time > hour and minutes roll over continuously",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "hour and minutes roll over to exactly midnight",
+      "name": "Clock > Creating a new clock with an initial time > hour and minutes roll over to exactly midnight",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "negative hour",
+      "name": "Clock > Creating a new clock with an initial time > negative hour",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "negative hour rolls over",
+      "name": "Clock > Creating a new clock with an initial time > negative hour rolls over",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "negative hour rolls over continuously",
+      "name": "Clock > Creating a new clock with an initial time > negative hour rolls over continuously",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "negative minutes",
+      "name": "Clock > Creating a new clock with an initial time > negative minutes",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "negative minutes rolls over",
+      "name": "Clock > Creating a new clock with an initial time > negative minutes rolls over",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "negative minutes rolls over continuously",
+      "name": "Clock > Creating a new clock with an initial time > negative minutes rolls over continuously",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "negative sixty minutes is previous hour",
+      "name": "Clock > Creating a new clock with an initial time > negative sixty minutes is previous hour",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "negative hour and minutes both roll over",
+      "name": "Clock > Creating a new clock with an initial time > negative hour and minutes both roll over",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "negative hour and minutes both roll over continuously",
+      "name": "Clock > Creating a new clock with an initial time > negative hour and minutes both roll over continuously",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "add minutes",
+      "name": "Clock > Adding minutes > add minutes",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "add no minutes",
+      "name": "Clock > Adding minutes > add no minutes",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "add to next hour",
+      "name": "Clock > Adding minutes > add to next hour",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "add more than one hour",
+      "name": "Clock > Adding minutes > add more than one hour",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "add more than two hours with carry",
+      "name": "Clock > Adding minutes > add more than two hours with carry",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "add across midnight",
+      "name": "Clock > Adding minutes > add across midnight",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "add more than one day (1500 min = 25 hrs)",
+      "name": "Clock > Adding minutes > add more than one day (1500 min = 25 hrs)",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "add more than two days",
+      "name": "Clock > Adding minutes > add more than two days",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "subtract minutes",
+      "name": "Clock > Subtract minutes > subtract minutes",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "subtract to previous hour",
+      "name": "Clock > Subtract minutes > subtract to previous hour",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "subtract more than an hour",
+      "name": "Clock > Subtract minutes > subtract more than an hour",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "subtract across midnight",
+      "name": "Clock > Subtract minutes > subtract across midnight",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "subtract more than two hours",
+      "name": "Clock > Subtract minutes > subtract more than two hours",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "subtract more than two hours with borrow",
+      "name": "Clock > Subtract minutes > subtract more than two hours with borrow",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "subtract more than one day (1500 min = 25 hrs)",
+      "name": "Clock > Subtract minutes > subtract more than one day (1500 min = 25 hrs)",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "subtract more than two days",
+      "name": "Clock > Subtract minutes > subtract more than two days",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "clocks with same time",
+      "name": "Clock > Compare two clocks for equality > clocks with same time",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "clocks a minute apart",
+      "name": "Clock > Compare two clocks for equality > clocks a minute apart",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "clocks an hour apart",
+      "name": "Clock > Compare two clocks for equality > clocks an hour apart",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "clocks with hour overflow",
+      "name": "Clock > Compare two clocks for equality > clocks with hour overflow",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "clocks with hour overflow by several days",
+      "name": "Clock > Compare two clocks for equality > clocks with hour overflow by several days",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "clocks with negative hour",
+      "name": "Clock > Compare two clocks for equality > clocks with negative hour",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "clocks with negative hour that wraps",
+      "name": "Clock > Compare two clocks for equality > clocks with negative hour that wraps",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "clocks with negative hour that wraps multiple times",
+      "name": "Clock > Compare two clocks for equality > clocks with negative hour that wraps multiple times",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "clocks with minute overflow",
+      "name": "Clock > Compare two clocks for equality > clocks with minute overflow",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "clocks with minute overflow by several days",
+      "name": "Clock > Compare two clocks for equality > clocks with minute overflow by several days",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "clocks with negative minute",
+      "name": "Clock > Compare two clocks for equality > clocks with negative minute",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "clocks with negative minute that wraps",
+      "name": "Clock > Compare two clocks for equality > clocks with negative minute that wraps",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "clocks with negative minute that wraps multiple times",
+      "name": "Clock > Compare two clocks for equality > clocks with negative minute that wraps multiple times",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "clocks with negative hours and minutes",
+      "name": "Clock > Compare two clocks for equality > clocks with negative hours and minutes",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "clocks with negative hours and minutes that wrap",
+      "name": "Clock > Compare two clocks for equality > clocks with negative hours and minutes that wrap",
       "status": "pass",
       "message": "",
       "output": "",
       "test_code": ""
     },
     {
-      "name": "full clock and zeroed clock",
+      "name": "Clock > Compare two clocks for equality > full clock and zeroed clock",
       "status": "pass",
       "message": "",
       "output": "",
