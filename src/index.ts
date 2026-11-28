@@ -13,6 +13,7 @@ import type {
   TestRun,
   TranspileFn,
 } from "./types";
+import { FORMAT } from "./format";
 import { findCode, readConfig } from "./utils";
 
 export type * from "./types";
@@ -20,6 +21,7 @@ export * from "./utils";
 
 import jestExpect from "expect";
 import { ModuleMocker } from "jest-mock";
+import { format } from "util";
 import { workerize } from "./workerize";
 
 export function runTests(
@@ -106,8 +108,9 @@ async function runJestTests(
   const { entry, urls } = prepare(code, runOptions);
 
   // Set some globals
-  const globals = globalThis as Record<string, any>;
+  const globals = globalThis as Record<string | symbol, any>;
   globals["expect"] = jestExpect;
+  globals[FORMAT] = format;
 
   const _moduleMocker = new ModuleMocker(globalThis);
   const fn = _moduleMocker.fn.bind(_moduleMocker);
@@ -147,6 +150,7 @@ async function runJestTests(
     // Clear globals
     delete globals["expect"];
     delete globals["jest"];
+    delete globals[FORMAT];
   }
 
   // Bail early if dead-on-arrival

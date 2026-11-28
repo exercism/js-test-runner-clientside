@@ -1,3 +1,5 @@
+import { parse } from "acorn";
+import type { Node } from "acorn";
 import type {
   FailedTestRun,
   TestRun,
@@ -57,16 +59,13 @@ export async function generateOutput(
     const messages = testRun.messages[taskId] || [];
     messages.forEach((testResult) => {
       const message = (testResult.details || "").split("\n");
-      const testCode = message[0].startsWith("expect(")
-        ? message.shift() || ""
-        : "";
 
       testResults.push({
         name: testResult.test,
         status: testResult.status === "passed" ? "pass" : "fail",
         message: output(message),
-        output: output(testRun.logs[taskId]),
-        test_code: testCode,
+        output: output(testResult.logs) || null,
+        test_code: testCode(testResult.code),
         task_id:
           options && options["flag.tests.task-per-describe"]
             ? taskId
@@ -75,9 +74,22 @@ export async function generateOutput(
     });
   }
 
+  // As in the server runner, the logs written outside a test show with the
+  // first failed test, or with the last test if every test passed.
+  const globalOutput = output(testRun.logs);
+  const failedIndex = testResults.findIndex((test) => test.status === "fail");
+  const globalTest =
+    testResults[failedIndex === -1 ? testResults.length - 1 : failedIndex];
+
+  if (globalOutput && globalTest) {
+    globalTest.output = [globalOutput, globalTest.output]
+      .filter(Boolean)
+      .join("\n");
+  }
+
   return {
     status,
-    message: output(testRun.logs[0]),
+    message: globalTest ? "" : globalOutput,
     tests: testResults,
     version: 3,
   };
@@ -91,5 +103,47 @@ function output(raw: string[] | null | undefined) {
     return message
       .slice(0, 500 - "... (500 chars max)".length)
       .concat("... (500 chars max)");
+  }
+}
+
+/**
+ * Gives the code of a test, as the server runner does: the statements in the
+ * test function's body, each on its own line, or the expression that an arrow
+ * function returns. It gives null if the test function can't be parsed.
+ */
+export function testCode(source: string | undefined): string | null {
+  if (!source) {
+    return null;
+  }
+
+  const wrapped = `(${source})`;
+  const text = (node: Node) => wrapped.substring(node.start, node.end);
+
+  try {
+    const program = parse(wrapped, {
+      ecmaVersion: "latest",
+      sourceType: "module",
+    });
+    const [statement] = program.body;
+
+    if (program.body.length !== 1 || statement.type !== "ExpressionStatement") {
+      return null;
+    }
+
+    const fn = statement.expression;
+    if (
+      fn.type !== "ArrowFunctionExpression" &&
+      fn.type !== "FunctionExpression"
+    ) {
+      return null;
+    }
+
+    if (fn.body.type === "BlockStatement") {
+      return fn.body.body.map(text).join("\n");
+    }
+
+    return text(fn.body);
+  } catch {
+    return null;
   }
 }

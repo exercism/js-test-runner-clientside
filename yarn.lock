@@ -216,6 +216,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@exercism/javascript-browser-test-runner@workspace:."
   dependencies:
+    acorn: "npm:^8.14.0"
     browserslist: "npm:^4.28.1"
     browserslist-to-esbuild: "npm:^2.1.1"
     cross-env: "npm:^10.1.0"

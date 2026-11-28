@@ -48,12 +48,6 @@ const TIMEOUT_MESSAGE = "Did not finish the tests within reasonable time";
 // Fixtures where the result differs in spirit from the server runner, with the
 // reason. Each one runs as a TODO, so the difference stays in the test report.
 const SERVER_DIFFERENCES = {
-  "forth/oxe-b": {
-    all: "beforeEach in an outer describe does not run for tests in a nested describe",
-  },
-  "pythagorean-triplet/exemplar": {
-    all: "a test.skip fails the run, because the config has no flag.tests.includes-optional",
-  },
   "two-fer/fail/tests": {
     all: "the runner stops at the first failing test, so the third test is missing",
   },
@@ -206,17 +200,22 @@ async function runFixture(fixture, mode) {
 }
 
 /**
- * This runner names a test without its describe blocks ("no name given"),
- * while the server runner includes them ("twoFer() > no name given"). The
- * comparison uses the last part of the name.
+ * The comparison covers the overall status, and each test's name, status,
+ * output and code. The server runner gives null as the code of a test named
+ * with a template literal, and this runner gives the code. So the comparison
+ * leaves out the code where the server runner gives null.
  */
-function summarise(result) {
+function summarise(result, serverResult = result) {
   return {
     status: result.status,
-    tests: (result.tests ?? []).map(({ name, status }) => ({
-      name: name.split(" > ").at(-1),
-      status,
-    })),
+    tests: (result.tests ?? []).map(
+      ({ name, status, output, test_code }, i) => {
+        const serverCode = serverResult.tests?.[i]?.test_code;
+        return serverCode === null
+          ? { name, status, output }
+          : { name, status, output, test_code };
+      },
+    ),
   };
 }
 
@@ -229,7 +228,7 @@ function assertAgreesWithServer(fixture, actual) {
   }
 
   const expected = JSON.parse(readFileSync(serverResultsPath, "utf8"));
-  assert.deepEqual(summarise(actual), summarise(expected));
+  assert.deepEqual(summarise(actual, expected), summarise(expected));
 
   if (expected.status === "error") {
     assert.notEqual(

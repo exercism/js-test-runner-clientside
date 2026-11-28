@@ -3,18 +3,18 @@
   "message": "",
   "tests": [
     {
-      "name": "no name given",
+      "name": "twoFer() > no name given",
       "status": "pass",
       "message": "",
-      "output": "\"Alice\"",
-      "test_code": ""
+      "output": "[log] undefined",
+      "test_code": "expect(twoFer()).toEqual('One for you, one for me.');"
     },
     {
-      "name": "a name given",
+      "name": "twoFer() > a name given",
       "status": "fail",
-      "message": "Expected: \"One for Alice, one for me.\"\nReceived: \"One for you, one for me.\"",
-      "output": "\"Alice\"",
-      "test_code": "expect(received).toEqual(expected) // deep equality"
+      "message": "expect(received).toEqual(expected) // deep equality\n\nExpected: \"One for Alice, one for me.\"\nReceived: \"One for you, one for me.\"",
+      "output": "[log] Some global log\n[log] Alice",
+      "test_code": "const name = 'Alice';\nexpect(twoFer(name)).toEqual('One for Alice, one for me.');"
     }
   ],
   "version": 3

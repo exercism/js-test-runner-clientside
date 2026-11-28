@@ -3,25 +3,25 @@
   "message": "",
   "tests": [
     {
-      "name": "no name given",
+      "name": "twoFer() > no name given",
       "status": "pass",
       "message": "",
-      "output": "",
-      "test_code": ""
+      "output": null,
+      "test_code": "expect(twoFer()).toEqual('One for you, one for me.');"
     },
     {
-      "name": "a name given",
+      "name": "twoFer() > a name given",
       "status": "pass",
       "message": "",
-      "output": "",
-      "test_code": ""
+      "output": null,
+      "test_code": "expect(twoFer('Alice')).toEqual('One for Alice, one for me.');"
     },
     {
-      "name": "another name given",
+      "name": "twoFer() > another name given",
       "status": "pass",
       "message": "",
-      "output": "",
-      "test_code": ""
+      "output": null,
+      "test_code": "expect(twoFer('Bob')).toEqual('One for Bob, one for me.');"
     }
   ],
   "version": 3

@@ -3,27 +3,27 @@
   "message": "",
   "tests": [
     {
-      "name": "no name given",
+      "name": "twoFer() > no name given",
       "status": "pass",
       "message": "",
-      "output": "\"name: you\"\n\"name: Alice\"\n\"name: Bob\"",
-      "test_code": "",
+      "output": "[log] name: you",
+      "test_code": "expect(twoFer()).toEqual('One for you, one for me.');",
       "task_id": 1
     },
     {
-      "name": "a name given",
+      "name": "twoFer() > a name given",
       "status": "pass",
       "message": "",
-      "output": "\"name: you\"\n\"name: Alice\"\n\"name: Bob\"",
-      "test_code": "",
+      "output": "[log] name: Alice",
+      "test_code": "const name = 'Alice';\nexpect(twoFer(name)).toEqual('One for Alice, one for me.');",
       "task_id": 1
     },
     {
-      "name": "another name given",
+      "name": "twoFer() > another name given",
       "status": "pass",
       "message": "",
-      "output": "\"name: you\"\n\"name: Alice\"\n\"name: Bob\"",
-      "test_code": "",
+      "output": "[log] name: Bob",
+      "test_code": "const name = 'Bob';\nexpect(twoFer(name)).toEqual('One for Bob, one for me.');",
       "task_id": 1
     }
   ],
