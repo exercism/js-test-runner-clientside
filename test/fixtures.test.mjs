@@ -48,9 +48,6 @@ const TIMEOUT_MESSAGE = "Did not finish the tests within reasonable time";
 // Fixtures where the result differs in spirit from the server runner, with the
 // reason. Each one runs as a TODO, so the difference stays in the test report.
 const SERVER_DIFFERENCES = {
-  "pythagorean-triplet/exemplar": {
-    all: "a test.skip fails the run, because the config has no flag.tests.includes-optional",
-  },
   "two-fer/fail/tests": {
     all: "the runner stops at the first failing test, so the third test is missing",
   },
