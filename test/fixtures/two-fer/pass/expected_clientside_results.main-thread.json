@@ -1,0 +1,28 @@
+{
+  "status": "pass",
+  "message": "",
+  "tests": [
+    {
+      "name": "no name given",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "a name given",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "another name given",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    }
+  ],
+  "version": 3
+}

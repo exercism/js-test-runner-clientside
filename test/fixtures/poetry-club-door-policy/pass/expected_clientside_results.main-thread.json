@@ -1,0 +1,77 @@
+{
+  "status": "pass",
+  "message": "",
+  "tests": [
+    {
+      "name": "it outputs a character per line",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "it outputs takes the first characters",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "it generates the correct password",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "frontDoorPassword(SUMMER)",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "frontDoorPassword(SOPHIA)",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "frontDoorPassword(CODE)",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "it outputs a character per line",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "it outputs takes the first characters",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "it generates the correct password",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "backDoorGuard(WORK)",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    }
+  ],
+  "version": 3
+}

@@ -1,0 +1,47 @@
+{
+  "status": "pass",
+  "message": "",
+  "tests": [
+    {
+      "name": "constant is defined correctly",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": "",
+      "task_id": 1
+    },
+    {
+      "name": "calculates the remaining time",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": "",
+      "task_id": 2
+    },
+    {
+      "name": "works correctly for the edge cases",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": "",
+      "task_id": 2
+    },
+    {
+      "name": "calculates the preparation time",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": "",
+      "task_id": 3
+    },
+    {
+      "name": "calculates the total cooking time",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": "",
+      "task_id": 4
+    }
+  ],
+  "version": 3
+}

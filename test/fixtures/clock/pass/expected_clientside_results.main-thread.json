@@ -1,0 +1,371 @@
+{
+  "status": "pass",
+  "message": "",
+  "tests": [
+    {
+      "name": "on the hour",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "past the hour",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "midnight is zero hours",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "hour rolls over",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "hour rolls over continuously",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "sixty minutes is next hour",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "minutes roll over",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "minutes roll over continuously",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "hour and minutes roll over",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "hour and minutes roll over continuously",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "hour and minutes roll over to exactly midnight",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "negative hour",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "negative hour rolls over",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "negative hour rolls over continuously",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "negative minutes",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "negative minutes rolls over",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "negative minutes rolls over continuously",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "negative sixty minutes is previous hour",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "negative hour and minutes both roll over",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "negative hour and minutes both roll over continuously",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "add minutes",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "add no minutes",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "add to next hour",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "add more than one hour",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "add more than two hours with carry",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "add across midnight",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "add more than one day (1500 min = 25 hrs)",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "add more than two days",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "subtract minutes",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "subtract to previous hour",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "subtract more than an hour",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "subtract across midnight",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "subtract more than two hours",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "subtract more than two hours with borrow",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "subtract more than one day (1500 min = 25 hrs)",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "subtract more than two days",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "clocks with same time",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "clocks a minute apart",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "clocks an hour apart",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "clocks with hour overflow",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "clocks with hour overflow by several days",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "clocks with negative hour",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "clocks with negative hour that wraps",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "clocks with negative hour that wraps multiple times",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "clocks with minute overflow",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "clocks with minute overflow by several days",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "clocks with negative minute",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "clocks with negative minute that wraps",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "clocks with negative minute that wraps multiple times",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "clocks with negative hours and minutes",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "clocks with negative hours and minutes that wrap",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    },
+    {
+      "name": "full clock and zeroed clock",
+      "status": "pass",
+      "message": "",
+      "output": "",
+      "test_code": ""
+    }
+  ],
+  "version": 3
+}

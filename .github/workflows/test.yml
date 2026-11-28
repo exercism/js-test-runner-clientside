@@ -1,0 +1,33 @@
+name: js-test-runner-clientside / test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-26.04
+
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Use Node.js LTS
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: 24.x
+
+      - name: Install project dependencies
+        run: |
+          corepack enable
+          yarn -v
+          yarn install --immutable
+
+      - name: Install headless Chromium
+        run: yarn playwright install --with-deps chromium-headless-shell
+
+      - name: Run the fixture tests in worker and main-thread mode
+        run: yarn test

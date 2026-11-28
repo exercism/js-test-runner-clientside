@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "status": "error",
+  "message": "Expected at least one test file to be included (/two-fer\\.spec\\.js$/). Actual: two-fer.js,.meta/config.json",
+  "tests": []
+}

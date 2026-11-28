@@ -1,0 +1,6 @@
+{
+  "status": "error",
+  "message": "Did not finish the tests within reasonable time",
+  "tests": [],
+  "version": 1
+}
