@@ -20,7 +20,8 @@ export interface TestRun {
   skipped: number;
   passed: number;
   messages: TestMessage[][];
-  logs: string[][];
+  /** Logs written outside a test, such as when the solution file loads */
+  logs: string[];
   result: null | "passed" | "failed";
   completed: true | null;
 }
@@ -34,6 +35,8 @@ export interface TestMessage {
   status: "failed" | "passed";
   details?: string;
   err?: Error;
+  /** Logs written while the test ran, such as "[log] name: Alice" */
+  logs?: string[];
 }
 
 export interface OutputInterface {

@@ -131,7 +131,7 @@ ${user[filePath]}
         (importText) => `/* ${importText} */`,
       )
       .split("\n");
-  
+
     // Add test helper below main `import { ... } from './solution`
     let injectIndex = lines.findIndex((l) => l.indexOf("from ") !== -1) + 1;
     if (injectIndex === -1) {
@@ -141,7 +141,7 @@ ${user[filePath]}
     }
 
     // Add log listener
-    const logImport = `import { addListener as addLogListener } from '${globalLogger}'`;
+    const logImport = `import { addListener as addLogListener, originalConsole } from '${globalLogger}'`;
     if (injectIndex === -1) {
       lines.unshift(logImport);
     } else {
@@ -294,25 +294,50 @@ function makeCombinedTest(test: Record<string, string>) {
 
 /**
  * Code that will act as a global logger that is capable of pushing the logged
- * messages to the test run
+ * messages to the test run.
+ *
+ * It replaces the console methods that the server runner records, and formats
+ * each message as Node's console does. The bundle sets the formatter (util's
+ * format) on globalThis. Messages logged before the test helper listens, such
+ * as logs written when the solution file loads, are kept and handed to the
+ * first listener.
  */
 const LOGGER = `
 const listeners = []
-const originalConsoleLog = console.log.bind(console)
+const early = []
+const FORMAT = Symbol.for('exercism.javascript-browser-test-runner.format')
 
-export function log(...args) {
-  args.forEach((arg) => {
-    const message = JSON.stringify(arg, null, 2)
-    listeners.forEach((listener) => listener(message))
-  })
-
-  originalConsoleLog(...args)
+function format(...args) {
+  const formatter = globalThis[FORMAT]
+  return formatter ? formatter(...args) : args.map(String).join(' ')
 }
 
-console.log = log
+export const originalConsole = {}
+
+for (const type of ['log', 'info', 'warn', 'error', 'debug']) {
+  const original = console[type].bind(console)
+  originalConsole[type] = original
+
+  console[type] = (...args) => {
+    const message = format(...args)
+    if (listeners.length === 0) {
+      early.push([type, message])
+    } else {
+      listeners.forEach((listener) => listener(type, message))
+    }
+
+    original(...args)
+  }
+}
+
+export function log(...args) {
+  console.log(...args)
+}
 
 export function addListener(listener) {
   listeners.push(listener);
+  early.splice(0).forEach(([type, message]) => listener(type, message))
+
   return () => {
     const index = listeners.indexOf(listener);
     if (index !== -1) {

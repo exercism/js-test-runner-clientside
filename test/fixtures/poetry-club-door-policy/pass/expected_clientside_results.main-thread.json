@@ -6,70 +6,70 @@
       "name": "strings > front door > it outputs a character per line",
       "status": "pass",
       "message": "",
-      "output": "",
+      "output": null,
       "test_code": ""
     },
     {
       "name": "strings > front door > it outputs takes the first characters",
       "status": "pass",
       "message": "",
-      "output": "",
+      "output": null,
       "test_code": ""
     },
     {
       "name": "strings > front door > it generates the correct password",
       "status": "pass",
       "message": "",
-      "output": "",
+      "output": null,
       "test_code": ""
     },
     {
       "name": "strings > front door > frontDoorPassword(SUMMER)",
       "status": "pass",
       "message": "",
-      "output": "",
+      "output": null,
       "test_code": ""
     },
     {
       "name": "strings > front door > frontDoorPassword(SOPHIA)",
       "status": "pass",
       "message": "",
-      "output": "",
+      "output": null,
       "test_code": ""
     },
     {
       "name": "strings > front door > frontDoorPassword(CODE)",
       "status": "pass",
       "message": "",
-      "output": "",
+      "output": null,
       "test_code": ""
     },
     {
       "name": "strings > back door > it outputs a character per line",
       "status": "pass",
       "message": "",
-      "output": "",
+      "output": null,
       "test_code": ""
     },
     {
       "name": "strings > back door > it outputs takes the first characters",
       "status": "pass",
       "message": "",
-      "output": "",
+      "output": null,
       "test_code": ""
     },
     {
       "name": "strings > back door > it generates the correct password",
       "status": "pass",
       "message": "",
-      "output": "",
+      "output": null,
       "test_code": ""
     },
     {
       "name": "strings > back door > backDoorGuard(WORK)",
       "status": "pass",
       "message": "",
-      "output": "",
+      "output": null,
       "test_code": ""
     }
   ],

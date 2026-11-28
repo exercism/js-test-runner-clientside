@@ -6,7 +6,7 @@
       "name": "twoFer() > no name given",
       "status": "pass",
       "message": "",
-      "output": "\"name: you\"\n\"name: Alice\"\n\"name: Bob\"",
+      "output": "[log] name: you",
       "test_code": "",
       "task_id": 1
     },
@@ -14,7 +14,7 @@
       "name": "twoFer() > a name given",
       "status": "pass",
       "message": "",
-      "output": "\"name: you\"\n\"name: Alice\"\n\"name: Bob\"",
+      "output": "[log] name: Alice",
       "test_code": "",
       "task_id": 1
     },
@@ -22,7 +22,7 @@
       "name": "twoFer() > another name given",
       "status": "pass",
       "message": "",
-      "output": "\"name: you\"\n\"name: Alice\"\n\"name: Bob\"",
+      "output": "[log] name: Bob",
       "test_code": "",
       "task_id": 1
     }

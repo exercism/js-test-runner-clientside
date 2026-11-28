@@ -6,7 +6,7 @@
       "name": "EXPECTED_MINUTES_IN_OVEN > constant is defined correctly",
       "status": "pass",
       "message": "",
-      "output": "",
+      "output": null,
       "test_code": "",
       "task_id": 1
     },
@@ -14,7 +14,7 @@
       "name": "remainingMinutesInOven > calculates the remaining time",
       "status": "pass",
       "message": "",
-      "output": "",
+      "output": null,
       "test_code": "",
       "task_id": 2
     },
@@ -22,7 +22,7 @@
       "name": "remainingMinutesInOven > works correctly for the edge cases",
       "status": "pass",
       "message": "",
-      "output": "",
+      "output": null,
       "test_code": "",
       "task_id": 2
     },
@@ -30,7 +30,7 @@
       "name": "preparationTimeInMinutes > calculates the preparation time",
       "status": "pass",
       "message": "",
-      "output": "",
+      "output": null,
       "test_code": "",
       "task_id": 3
     },
@@ -38,7 +38,7 @@
       "name": "totalTimeInMinutes > calculates the total cooking time",
       "status": "pass",
       "message": "",
-      "output": "",
+      "output": null,
       "test_code": "",
       "task_id": 4
     }

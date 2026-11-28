@@ -6,63 +6,63 @@
       "name": "Triplet > triplets whose sum is 12",
       "status": "pass",
       "message": "",
-      "output": "",
+      "output": null,
       "test_code": ""
     },
     {
       "name": "Triplet > triplets whose sum is 108",
       "status": "pass",
       "message": "",
-      "output": "",
+      "output": null,
       "test_code": ""
     },
     {
       "name": "Triplet > triplets whose sum is 1000",
       "status": "pass",
       "message": "",
-      "output": "",
+      "output": null,
       "test_code": ""
     },
     {
       "name": "Triplet > no matching triplets for 1001",
       "status": "pass",
       "message": "",
-      "output": "",
+      "output": null,
       "test_code": ""
     },
     {
       "name": "Triplet > returns all matching triplets",
       "status": "pass",
       "message": "",
-      "output": "",
+      "output": null,
       "test_code": ""
     },
     {
       "name": "Triplet > several matching triplets",
       "status": "pass",
       "message": "",
-      "output": "",
+      "output": null,
       "test_code": ""
     },
     {
       "name": "Triplet > returns triplets with no factor smaller than minimum factor",
       "status": "pass",
       "message": "",
-      "output": "",
+      "output": null,
       "test_code": ""
     },
     {
       "name": "Triplet > returns triplets with no factor larger than maximum factor",
       "status": "pass",
       "message": "",
-      "output": "",
+      "output": null,
       "test_code": ""
     },
     {
       "name": "Triplet > returns triplets with factors in range",
       "status": "pass",
       "message": "",
-      "output": "",
+      "output": null,
       "test_code": ""
     }
   ],

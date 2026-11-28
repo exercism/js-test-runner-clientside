@@ -1,9 +1,12 @@
 import jestExpect from "expect";
 import { ModuleMocker } from "jest-mock";
+import { format } from "util";
+import { FORMAT } from "./format";
 
 // Set some globals
-const globals = globalThis as Record<string, any>;
+const globals = globalThis as Record<string | symbol, any>;
 globals["expect"] = jestExpect;
+globals[FORMAT] = format;
 
 const _moduleMocker = new ModuleMocker(globalThis);
 const fn = _moduleMocker.fn.bind(_moduleMocker);

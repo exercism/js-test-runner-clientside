@@ -6,21 +6,21 @@
       "name": "twoFer() > no name given",
       "status": "pass",
       "message": "",
-      "output": "",
+      "output": null,
       "test_code": ""
     },
     {
       "name": "twoFer() > a name given",
       "status": "pass",
       "message": "",
-      "output": "",
+      "output": null,
       "test_code": ""
     },
     {
       "name": "twoFer() > another name given",
       "status": "pass",
       "message": "",
-      "output": "",
+      "output": null,
       "test_code": ""
     }
   ],

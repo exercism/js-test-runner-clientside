@@ -65,7 +65,7 @@ export async function generateOutput(
         name: testResult.test,
         status: testResult.status === "passed" ? "pass" : "fail",
         message: output(message),
-        output: output(testRun.logs[taskId]),
+        output: output(testResult.logs) || null,
         test_code: testCode,
         task_id:
           options && options["flag.tests.task-per-describe"]
@@ -75,9 +75,22 @@ export async function generateOutput(
     });
   }
 
+  // As in the server runner, the logs written outside a test show with the
+  // first failed test, or with the last test if every test passed.
+  const globalOutput = output(testRun.logs);
+  const failedIndex = testResults.findIndex((test) => test.status === "fail");
+  const globalTest =
+    testResults[failedIndex === -1 ? testResults.length - 1 : failedIndex];
+
+  if (globalOutput && globalTest) {
+    globalTest.output = [globalOutput, globalTest.output]
+      .filter(Boolean)
+      .join("\n");
+  }
+
   return {
     status,
-    message: output(testRun.logs[0]),
+    message: globalTest ? "" : globalOutput,
     tests: testResults,
     version: 3,
   };

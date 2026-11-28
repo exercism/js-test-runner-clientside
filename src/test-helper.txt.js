@@ -1,6 +1,5 @@
 const run = {
   taskId: 0,
-  testTaskId: 0,
   failed: 0,
   skipped: 0,
   passed: 0,
@@ -11,9 +10,15 @@ const run = {
   completed: null,
 };
 
-function log(logMessage) {
-  run.logs[run.testTaskId] ||= [];
-  run.logs[run.testTaskId].push(logMessage);
+/**
+ * While a test function runs, its logs go to that test. Every other log, such
+ * as one written when the solution file loads or in a hook, goes to run.logs.
+ * The server runner does the same.
+ */
+let testLogs = null;
+
+function log(type, message) {
+  (testLogs ?? run.logs).push(`[${type}] ${message}`);
 }
 
 const removeLogListener = addLogListener(log);
@@ -65,27 +70,27 @@ function fullName(suite, name) {
 /** Adds a step to the queue. The steps run one at a time, in order. */
 function enqueue(step) {
   run.current = run.current.then(step).catch((err) => {
-    console.error("[test] failed to run a step \n", err);
+    originalConsole.error("[test] failed to run a step \n", err);
   });
 }
 
 function startTest(taskId, name) {
-  console.debug(`[test (${taskId})]:start ${name}`);
+  originalConsole.debug(`[test (${taskId})]:start ${name}`);
 
   run.messages[taskId] ||= [];
 }
 
-function passTest(taskId, name) {
+function passTest(taskId, name, logs = []) {
   run.passed += 1;
-  console.debug(`[test (${taskId})]:pass ${name}`);
+  originalConsole.debug(`[test (${taskId})]:pass ${name}`);
 
   run.messages[taskId] ||= [];
-  run.messages[taskId].push({ test: name, status: "passed" });
+  run.messages[taskId].push({ test: name, status: "passed", logs });
 }
 
-function failTest(taskId, name, err) {
+function failTest(taskId, name, err, logs = []) {
   run.failed += 1;
-  console.debug(`[test (${taskId})]:fail ${name}`);
+  originalConsole.debug(`[test (${taskId})]:fail ${name}`);
 
   run.messages[taskId] ||= [];
   run.messages[taskId].push({
@@ -93,17 +98,18 @@ function failTest(taskId, name, err) {
     status: "failed",
     details: err && err.message,
     err: err,
+    logs,
   });
 
   globalThis.lastErr = err;
 
   if (err && err.constructor.name === "JestAssertionError") {
-    console.error(`[test] failed assertion of ${name}.\n`, err.message);
+    originalConsole.error(`[test] failed assertion of ${name}.\n`, err.message);
   } else if (err instanceof SyntaxError) {
     failFast = true;
-    console.error(`[test] syntax is not valid JavaScript \n`, err);
+    originalConsole.error(`[test] syntax is not valid JavaScript \n`, err);
   } else {
-    console.error(`[test] failed to run ${name} \n`, err);
+    originalConsole.error(`[test] failed to run ${name} \n`, err);
   }
 }
 
@@ -112,14 +118,14 @@ function skipTest() {
 }
 
 function runSuite(name) {
-  console.debug("[suite] " + name);
+  originalConsole.debug("[suite] " + name);
   awaiting += 1;
 }
 
 function finishSuite() {
   awaiting -= 1;
   if (awaiting > 0) {
-    return console.debug(`[suite] still running, awaiting ${awaiting}`);
+    return originalConsole.debug(`[suite] still running, awaiting ${awaiting}`);
   }
 
   run.result = run.failed === 0 ? "passed" : "failed";
@@ -251,8 +257,7 @@ async function queueTest(name, c, suite) {
   const taskId = suite.taskId;
   const testName = fullName(suite, name);
 
-  console.debug(`[start] ${testName} (task ${taskId})`);
-  run.testTaskId = taskId;
+  originalConsole.debug(`[start] ${testName} (task ${taskId})`);
 
   if (failFast && run.failed > 0) {
     skipTest();
@@ -262,6 +267,7 @@ async function queueTest(name, c, suite) {
   startTest(taskId, testName);
 
   const suites = suitesOf(suite);
+  const logs = [];
   let failed = false;
   let error;
 
@@ -283,7 +289,12 @@ async function queueTest(name, c, suite) {
       }
     }
 
-    await c();
+    testLogs = logs;
+    try {
+      await c();
+    } finally {
+      testLogs = null;
+    }
   } catch (err) {
     fail(err);
   }
@@ -299,12 +310,12 @@ async function queueTest(name, c, suite) {
   }
 
   if (failed) {
-    failTest(taskId, testName, error);
+    failTest(taskId, testName, error, logs);
   } else {
-    passTest(taskId, testName);
+    passTest(taskId, testName, logs);
   }
 
-  console.debug(`[end] ${testName} (task ${taskId})`);
+  originalConsole.debug(`[end] ${testName} (task ${taskId})`);
 }
 
 if (typeof jest !== "undefined") {
@@ -313,7 +324,7 @@ if (typeof jest !== "undefined") {
 
     Object.entries(mocked).forEach(([key, value]) => {
       globalThis[key] = value;
-      console.debug(`[mocked] ${key} from ${_moduleName}`);
+      originalConsole.debug(`[mocked] ${key} from ${_moduleName}`);
     });
   };
 }

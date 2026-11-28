@@ -199,10 +199,18 @@ async function runFixture(fixture, mode) {
   }
 }
 
+/**
+ * The comparison covers the overall status, and each test's name, status and
+ * output.
+ */
 function summarise(result) {
   return {
     status: result.status,
-    tests: (result.tests ?? []).map(({ name, status }) => ({ name, status })),
+    tests: (result.tests ?? []).map(({ name, status, output }) => ({
+      name,
+      status,
+      output,
+    })),
   };
 }
 

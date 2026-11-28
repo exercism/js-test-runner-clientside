@@ -6,14 +6,14 @@
       "name": "twoFer() > no name given",
       "status": "pass",
       "message": "",
-      "output": "\"Alice\"",
+      "output": "[log] undefined",
       "test_code": ""
     },
     {
       "name": "twoFer() > a name given",
       "status": "fail",
       "message": "Expected: \"One for Alice, one for me.\"\nReceived: \"One for you, one for me.\"",
-      "output": "\"Alice\"",
+      "output": "[log] Some global log\n[log] Alice",
       "test_code": "expect(received).toEqual(expected) // deep equality"
     }
   ],
